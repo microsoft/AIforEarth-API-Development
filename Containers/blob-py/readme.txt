@@ -1,0 +1,1 @@
+docker run -p 8001:80 --cap-add SYS_ADMIN --device /dev/fuse "ai4eregistry.azurecr.io/1.0-blob-py-ubuntu16.04:latest"
