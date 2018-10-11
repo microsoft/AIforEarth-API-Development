@@ -11,6 +11,10 @@ These images and examples are meant to illustrate how to build containers for us
     5. [Create AppInsights instrumentation keys (optional)](#Create-AppInsights-instrumentation-keys)
     6. [Install required packages](#Install-required-packages)
     7. [Set environment variables](#Set-environment-variables)
+    8. [Build and run your image](#Build-and-run-your-image)
+    9. [Make requests](#Make-requests)
+    10. [Publish to Azure Container Registry](#Publish-to-Azure-Container-Registry)
+    11. [Run your container in ACI](#Run-your-container-in-ACI)
 3. [Grantee Onboarding Procedure](#Grantee-Onboarding-Procedure)
 4. [Contributing](#Contributing)
 
@@ -187,6 +191,19 @@ The instrumentation key is for general logging and tracing.
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
 
+### Edit LocalForwarder.config
+If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys:
+```Xml
+  <OpenCensusToApplicationInsights>
+    <InstrumentationKey>your_instrumentation_key_goes_here</InstrumentationKey>
+  </OpenCensusToApplicationInsights>
+  <ApplicationInsights>
+    <LiveMetricsStreamInstrumentationKey>your_instrumentation_key_goes_here</LiveMetricsStreamInstrumentationKey>
+    <LiveMetricsStreamAuthenticationApiKey>your_live_metrics_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
+    ...
+  </ApplicationInsights>
+```
+
 ## Install required packages
 Update the Dockerfile to install any required packages. There are several ways to install packages.  We cover popular ones here:
 - pip
@@ -228,25 +245,64 @@ ENV SERVICE_MODEL_FRAMEOWRK_VERSION "microsoft-r-open-3.4.3"
 ENV SERVICE_MODEL_VERSION "1.0"
 ```
 
-·        Update LocalForwarder.config with AppInsights keys - specify where to put which keys
+## Build and run your image
+This section features a step-by-step guide to building and running your image.
 
-·        Build docker container by running this command in the Dockerfile directory: docker build .
+### Build your image
+1. Navigate to the directory containing your Dockerfile.
+2. Execute the docker build command:
+```Bash
+docker build . -t your_custom_image_name:1
+```
+In the above command, -t denotes that you wish to label your image with the name "your_custom_image_name" and with the tag of 1.  Typically tags represent the build number.
 
-o   docker build . -t customvisionsample:1
+If you will be pushing your image to a repository, your docker build command will resemble:
+```Bash
+docker build . -t your_registry_name.azurecr.io/your_custom_image_name:1
+```
 
-·        Run container
+### Run your image, locally
+1. Run a container based on your image:
+```Bash
+docker run -p 8081:80 "customvisionsample:1"
+```
+In the above command, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
+```Dockerfile
+EXPOSE 80
+```
 
-o   docker run -p 8081:80 "customvisionsample:1"
+## Make requests
+Now that you have a local instance of your contianer running, you should issue requests and debug it, locally.  For this exercise, you may issue requests in whatever way that you would like, but we prefer using [Postman](#https://www.getpostman.com/) to quickly test our endpoints.
 
-o   80 is exposed in the Dockerfile
+### Test endpoints
+1. Open Postman or your favorite API development tool.
+2. From your service code, determine which endpoint you want to test.  If you are following one of our examples, the endpoint is: `http://localhost:<host_port>/<my_api_prefix>/<route>`.  Also, understand if you will issuing a POST or a GET.
+3. In your API dev tool, select POST or GET and enter the endpoint you would like to test.
+4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request.
+5. Click "Send" or execute the call to your endpoint.  The running container shell will contain any messages that are printed to the console.
 
-o   8081 is whatever you choose on your local machine
+## Publish to Azure Container Registry
+If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
 
-o   Teach them how to verify in Postman
+1. Log into your ACR:
+```Bash
+docker login --username <username> --password <password> <login server>
+```
+2. Push your image to your ACR:
+```Bash
+docker push your_registry_name.azurecr.io/your_custom_image_name:tag
+```
 
-·        Publish docker image
+## Run your container in ACI
+Running your container in Azure Container Instances is easy.  The easiest way is to open the Azure Portal to your ACR, select the repository and tag that corresponds to the image you just pushed, click on it and select "Run Instance."  This will create a new ACI instance of your image.
 
-·        Run container in Azure Container Instance
+### Issue requests to your hosted API
+Now that your service is running within ACI, we can issue requests to it.
+1. Open the Azure Portal to your ACI. Click on the "Overview" tab and copy the "IP address."
+2. In your API tool, change localhost:port to the IP that you just copied.
+3. Issue your request.
+
+To see logs/console output in your running container, click on "Containers" in your ACI in the Azure Portal and click the "Logs" tab.  If you configured Application Insights, you may use that to review logs, identify issues, and view metrics.
 
 # Grantee Onboarding Procedure
 AI for Earth Grantees may onboard their models/code to Azure and, in most cases, surface their solution as a private API or an AI for Earth API.  This section describes the fastest path to obtaining this result.
