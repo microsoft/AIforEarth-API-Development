@@ -15,6 +15,7 @@ These images and examples are meant to illustrate how to build containers for us
     9. [Make requests](#Make-requests)
     10. [Publish to Azure Container Registry](#Publish-to-Azure-Container-Registry)
     11. [Run your container in ACI](#Run-your-container-in-ACI)
+    12. [FAQs](#FAQs)
 3. [Grantee Onboarding Procedure](#Grantee-Onboarding-Procedure)
 4. [Contributing](#Contributing)
 
@@ -187,8 +188,10 @@ if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
 ```
 ## Create AppInsights instrumentation keys
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource):
+
 The instrumentation key is for general logging and tracing.
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
+
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
 
 ### Edit LocalForwarder.config
@@ -303,6 +306,12 @@ Now that your service is running within ACI, we can issue requests to it.
 3. Issue your request.
 
 To see logs/console output in your running container, click on "Containers" in your ACI in the Azure Portal and click the "Logs" tab.  If you configured Application Insights, you may use that to review logs, identify issues, and view metrics.
+
+## FAQs
+- What is "my_api_prefix"?
+"my_api_prefix" is a variable that denotes the prefix for all of your API endpoints.  Typically, you would create a versioned path, so that you can easily make breaking changes in the future without harming existing users.  A good prefix example would be: /v1/my_api/.
+- In the Python example, why is there an "AppInsights" and an "AI4EAppInsights" library?
+The Application Insights Python SDK is not an officially supported SDK, but it does provide great Flask integration.  Because of this, in our examples, we use the SDK's Flask integration, but we also provide a hardended (AI4EAppInsights) library that you should use for logging.
 
 # Grantee Onboarding Procedure
 AI for Earth Grantees may onboard their models/code to Azure and, in most cases, surface their solution as a private API or an AI for Earth API.  This section describes the fastest path to obtaining this result.
@@ -427,7 +436,7 @@ def post(self, msg=""):
     # Log message to Application Insights
     app.logger.info('Queued task: ' + taskId)
 
-    # Since we want to return the task information, create a tread to run the service code.
+    # Since we want to return the task information, create a thread to run the service code.
     thread = Thread(target = self.funct, args=(taskId))
     thread.start()
     return 'Starting task: ' + str(taskId)
