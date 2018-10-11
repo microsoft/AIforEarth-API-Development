@@ -16,7 +16,6 @@ AddTask<-function(req){
     lastId <- tail(tasks, 1)[,1]
     taskId = lastId + 1
 
-    newTask$id <- taskId
     print(newTask)
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
@@ -43,9 +42,10 @@ UpdateTaskStatus<-function(taskId, status){
   }
   else {
     newTask <- data.frame(
-      id = taskId,
-      state = c(status),
-      ts = c(format(Sys.time(), "%b %d %X %Y"))
+      uuid = taskId,
+      status = c(status),
+      timestamp = c(format(Sys.time(), "%b %d %X %Y")),
+      endpoint = "uri"
     )
 
     print(newTask)

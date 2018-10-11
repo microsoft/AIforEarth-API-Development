@@ -34,10 +34,13 @@ ProcessData<-function(taskId, config){
   tryCatch({
     # Update task status at any time
     UpdateTaskStatus(taskId, 'running')
+
+    #INSERT_YOUR_MODEL_CALL_HERE
+
     container_uri <- config$container_uri
 
     run_id <- config$run_id
-    observations_csv <- GetBlobFromContainer(container_uri, paste(run_id, "PatrolObservation_orig.csv", sep= "/"))
+    observations_csv <- GetBlobFromContainer(container_uri, paste(run_id, "Observation.csv", sep= "/"))
     observations <- read.csv(observations_csv)
 
     dir = WriteBlob(observations, container_uri, paste(run_id, "output_dir/output_name.csv", sep= "/"), include_row_names=FALSE)

@@ -1,7 +1,20 @@
 # AI for Earth - Creating APIs
 These images and examples are meant to illustrate how to build containers for use in the AI for Earth API system.
 
-## Layout and Contents
+## Contents
+1. [Repo Layout](#repo-layout)
+2. [Quickstart](#Quickstart)
+    1. [Choose a base image or example](#Choose-a-base-image-or-example)
+    2. [Insert code to call your model](#Insert-code-to-call-your-model)
+    3. [Input handling](#Input-handling)
+    4. [Output handling](#Output-handling)
+    5. [Create AppInsights instrumentation keys (optional)](#Create-AppInsights-instrumentation-keys)
+    6. [Install required packages](#Install-required-packages)
+    7. [Set environment variables](#Set-environment-variables)
+3. [Grantee Onboarding Procedure](#Grantee-Onboarding-Procedure)
+4. [Contributing](#Contributing)
+
+## Repo Layout
 - Containers
     - base-py [Base AI for Earth Python image.]
         - nvidia/cuda:9.2 ubuntu 16.04 base
@@ -37,7 +50,203 @@ These images and examples are meant to illustrate how to build containers for us
 - Examples
 
 ## Notes
-- Docker commands must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`
+- Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.
+
+# Quickstart
+1. [Choose a base image or start with an example.](#Choose-a-base-image-or-example)
+2. [Insert code to call your model.](#Insert-code-to-call-your-model)
+3. [Input handling](#Input-handling)
+
+## Choose a base image or example
+AI for Earth APIs are all built from an AI for Earth base image.  You may use a base image directly or start with an example.  The following sections will help you decide.
+
+### Base images
+- base-py
+- base-r
+- blob-py
+- blob-r
+
+### Examples
+- Basic Python API (Sync and Async)
+- Basic R API (Sync and Async)
+- Blob Python API
+- Synchronous Azure ML API
+- Synchronous PyTorch API
+
+## Insert code to call your model
+All examples contain the text "#INSERT_YOUR_MODEL_CALL_HERE".  This is intended to be a starting point to quickly get your API running with your model.  Simply adding your model will not perform necessary input checking, error handling, etc.
+
+## Input handling
+
+#### GET URL parameters
+For GET operations, best practice dictates that a noun is used in the URL in the segment before the related parameter.  An echo example is as follows.
+
+##### Python and Flask
+```Python
+@app.route(my_api_prefix + '/echo/<string:text>', methods=['GET'])
+def echo(text):
+    print(text)
+```
+##### R and Plumber
+```R
+#* @param text The text to echo back
+#* @get /echo/<text>
+GetProcessDataTaskStatus<-function(text){
+  print(text)
+}
+```
+
+#### POST body
+For non-trivial parameters, retrieve parameters from the body sent as part of the request. [JSON](https://json.org/) is the preferred standard for API transmission. The following gives an example of sample input, followed by Python and R usage.
+
+##### Sample Input
+```JSON
+{
+    "container_uri": "https://myblobacct.blob.core.windows.net/user?st=2018-08-02T12%3A01%3A00Z&se=5200-08-03T12%3A01%3A00Z&sp=rwl&sv=2017-04-17&sr=c&sig=xxx",
+    "run_id": "myrunid"
+}
+```
+
+##### Python and Flask
+```Python
+from flask import Flask, request
+import json
+
+post_body = json.loads(request.data)
+
+print(post_body['run_id'])
+print(post_body['container_uri'])
+```
+
+##### R and Plumber
+```R
+library(jsonlite)
+
+#* @post /process-data
+ProcessDataAPI<-function(req, res){
+  post_body <- req$postBody
+  input_data <- fromJSON(post_body, simplifyDataFrame=TRUE)
+
+  print(input_data$run_id)
+  print(input_data$container_uri)
+}
+```
+
+## Output handling
+Two return types are important when dealing with hosted ML APIs: non-binary and binary.
+
+#### Non-binary data
+The preferred method to return non-binary data is to use JSON.
+
+##### Python and Flask
+
+```Python
+import json
+def post(self):
+    ret = {}
+    ret['run_id'] = 'myrunid'
+    ret['container_uri'] = 'https://myblobacct.blob.core.windows.net/user?st=2018-08-02T12%3A01%3A00Z&se=5200-08-03T12%3A01%3A00Z&sp=rwl&sv=2017-04-17&sr=c&sig=xxx'
+
+    return dumps(ret)
+```
+
+##### R and Plumber
+```R
+ProcessDataAPI<-function(req, res){
+  post_body <- req$postBody
+  input_data <- fromJSON(post_body, simplifyDataFrame=TRUE)
+
+  # Return JSON containing run_id and container_uri 
+  data.frame(input_data$run_id, input_data$container_uri)
+}
+```
+
+#### Binary data
+Binary data includes images.
+
+##### Python and Flask
+
+```Python
+from io import BytesIO
+import tifffile
+from flask import send_file
+
+ACCEPTED_CONTENT_TYPES = ['image/tiff', 'application/octet-stream']
+
+if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
+    tiff_file = tifffile.imread(BytesIO(request.data))
+    # Do something with the tiff_file...
+    prediction_stream = BytesIO()
+    # Create your image to return...
+    prediction_stream.seek(0)
+    return send_file(prediction_stream)
+```
+## Create AppInsights instrumentation keys
+- [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource):
+The instrumentation key is for general logging and tracing.
+- [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
+The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
+
+## Install required packages
+Update the Dockerfile to install any required packages. There are several ways to install packages.  We cover popular ones here:
+- pip
+```Dockerfile
+RUN /usr/local/envs/ai4e_py_api/bin/pip install grpcio opencensus
+```
+- Anaconda
+```Dockerfile
+RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
+    && conda install -c conda-forge -n ai4e_py_api numpy pandas
+```
+
+- apt-get
+```Dockerfile
+RUN apt-get install gfortran -y
+```
+
+- R packages
+```Dockerfile
+RUN R -e 'install.packages("rgeos"); library(rgeos)'
+```
+## Set environment variables
+The Dockerfiles contain several environment variables that should be set for proper logging.  Follow the instructions within the Dockerfile.
+```Dockerfile
+# Set the following env var to your AppInsights instrumentation key.
+ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
+# Optional live metrics stream key, 
+ENV APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY  ''
+# Location where AppInsights stores its data
+ENV LOCALAPPDATA '/app_insights_data'
+# Internal address of the OpenCensus tracer (for sending traces to AppInsights)
+ENV OCAGENT_TRACE_EXPORTER_ENDPOINT 'localhost:55678'
+# The following variables will allow you to filter logs in AppInsights
+ENV SERVICE_OWNER "AI4E_Test"
+ENV SERVICE_CLUSTER "Local Docker"
+ENV SERVICE_MODEL_NAME "base-r example"
+ENV SERVICE_MODEL_FRAMEWORK "R"
+ENV SERVICE_MODEL_FRAMEOWRK_VERSION "microsoft-r-open-3.4.3"
+ENV SERVICE_MODEL_VERSION "1.0"
+```
+
+·        Update LocalForwarder.config with AppInsights keys - specify where to put which keys
+
+·        Build docker container by running this command in the Dockerfile directory: docker build .
+
+o   docker build . -t customvisionsample:1
+
+·        Run container
+
+o   docker run -p 8081:80 "customvisionsample:1"
+
+o   80 is exposed in the Dockerfile
+
+o   8081 is whatever you choose on your local machine
+
+o   Teach them how to verify in Postman
+
+·        Publish docker image
+
+·        Run container in Azure Container Instance
 
 # Grantee Onboarding Procedure
 AI for Earth Grantees may onboard their models/code to Azure and, in most cases, surface their solution as a private API or an AI for Earth API.  This section describes the fastest path to obtaining this result.
@@ -53,7 +262,7 @@ To demonstrate how easy it is to run an API service in Azure, we'll explore the 
 ### Orientation
 Under the examples/base-py directory, we find these objects:
 - [my_api](./examples/base-py/my_api) folder [Contains the API service files.]
-    - [runserver_min.py](./examples/base-py/my_api/runserver_min.py) [Contains the sample API service code.]
+    - [runserver.py](./examples/base-py/my_api/runserver.py) [Contains the sample API service code.]
 - [Dockerfile](./examples/base-py/Dockerfile) [A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. This Dockerfile contains all the commands needed to run the example API service.]
 - [LocalForwarder.config](./examples/base-py/LocalForwarder.config) [Application Insights tracing configuration. Replace your_key_goes_here with your actual key.]
 - [startup.sh](./examples/base-py/startup.sh) [A simple bash script that is used as the service's entrypoint. We use a bash script as it allows us to easily run other required commands without having to expand the Dockerfile. See the blob-mount-py/startup.sh as an expanded example.]
@@ -129,7 +338,7 @@ Next, we look at the "command" specification.  This is a single line, but we'll 
 `--http 0.0.0.0:80`
 - Specifices which port to use. Your API service will listen to this port. This port must be exposed in your Dockerfile.
 
-`--wsgi-file /app/my_api/runserver_min.py`
+`--wsgi-file /app/my_api/runserver.py`
 - This is the location file in your API service code that contains your 'app' definition: `app = Flask(__name__)`
 
 ### [runserver.py](./examples/base-py/my_api/runserver.py)

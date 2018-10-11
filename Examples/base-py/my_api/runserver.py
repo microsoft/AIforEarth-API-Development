@@ -72,6 +72,7 @@ def my_long_running_funct(**kwargs):
         return -1
 
     try:
+        #INSERT_YOUR_MODEL_CALL_HERE
         sleep(10)  # replace with real code
     except:
         log.log_exception(sys.exc_info()[0], taskId)

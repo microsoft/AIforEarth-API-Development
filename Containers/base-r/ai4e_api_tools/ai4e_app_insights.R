@@ -22,7 +22,7 @@ CONF_SERVICE_CONTAINER_NAME <- Sys.getenv("SERVICE_CONTAINER_NAME", unset="")
 IS_DEBUG <- Sys.getenv("DEBUG", unset=FALSE)
 
 log <- function(message, sev, taskId, additionalProperties){
-  if (CONF_KEY_GRANTEE != NULL) {
+  if (CONF_KEY_GRANTEE != NULL && nchar(CONF_KEY_AI4E) > 5) {
     payload <- get_payload(message, sev, CONF_KEY_GRANTEE, taskId, additionalProperties)
     if (IS_DEBUG) {
         print(payload)
