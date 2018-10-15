@@ -1,0 +1,8 @@
+[
+    {
+        "accountName":"enter_your_accountname",
+        "accountKey":"enter_your_accountkey",
+        "containerName":"enter_your_container_name",
+        "mappedDirectory":"/mnt/enter_your_local_directory"
+    }
+]
