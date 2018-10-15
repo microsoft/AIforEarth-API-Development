@@ -30,6 +30,10 @@ api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
 
 ai4e_wrapper = AI4EWrapper(app)
 
+@app.route('/', methods=['GET'])
+def health_check():
+    return "Health check OK"
+
 # POST, long-running/async API endpoint example
 @app.route(api_prefix + '/', methods=['POST'])
 def post():
