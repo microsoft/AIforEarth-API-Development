@@ -103,4 +103,10 @@ GetProcessDataTaskStatus<-function(taskId){
   return(status)
 }
 
+#* Provide healthcheck endpoint
+#* @get /
+GetProcessDataTaskStatus<-function(taskId){
+  return("OK")
+}
+
 # Please have an empty last line in the end; otherwise, you will see an error when starting a webserver
