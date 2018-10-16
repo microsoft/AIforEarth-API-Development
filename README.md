@@ -21,7 +21,7 @@ These images and examples are meant to illustrate how to build containers for us
 
 ## Repo Layout
 - Containers
-    - base-py [Base AI for Earth Python image.]
+    - base-py [Base AI for Earth Python image]
         - nvidia/cuda:9.2 ubuntu 16.04 base
         - supervisor
         - miniconda3 4.5.4
@@ -32,7 +32,7 @@ These images and examples are meant to illustrate how to build containers for us
         - applicationinsights
         - AI for Earth task management tools
         - AI for Earth Azure SAS Blob tools
-    - base-r [Base AI for Earth R image.]
+    - base-r [Base AI for Earth R image]
         - nvidia/cuda:9.2 ubuntu 16.04 base
         - supervisor
         - Python 3
@@ -46,10 +46,10 @@ These images and examples are meant to illustrate how to build containers for us
         - applicationinsights
         - AI for Earth task management tools
         - AI for Earth Azure SAS Blob tools
-    - blob-py [Base AI for Earth Python image with Azure Blob mounting tools.]
+    - blob-py [Base AI for Earth Python image with Azure Blob mounting tools]
         - AI for Earth base-py base
         - AI for Earth Azure Blob mounting tools
-    - blob-r [Base AI for Earth R image with Azure Blob mounting tools.]
+    - blob-r [Base AI for Earth R image with Azure Blob mounting tools]
         - AI for Earth base-r base
         - AI for Earth Azure Blob mounting tools
 - Examples
@@ -58,8 +58,8 @@ These images and examples are meant to illustrate how to build containers for us
 - Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.
 
 # Quickstart
-1. [Choose a base image or start with an example.](#Choose-a-base-image-or-example)
-2. [Insert code to call your model.](#Insert-code-to-call-your-model)
+1. [Choose a base image or start with an example](#Choose-a-base-image-or-example)
+2. [Insert code to call your model](#Insert-code-to-call-your-model)
 3. [Input handling](#Input-handling)
 
 ## Choose a base image or example
@@ -187,7 +187,7 @@ if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-- [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource):
+- [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
 The instrumentation key is for general logging and tracing.
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
@@ -231,9 +231,9 @@ RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ## Set environment variables
 The Dockerfiles contain several environment variables that should be set for proper logging.  Follow the instructions within the Dockerfile.
 ```Dockerfile
-# Set the following env var to your AppInsights instrumentation key.
+# Set the following env var to your AppInsights instrumentation key
 ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
-# Optional live metrics stream key, 
+# Optional live metrics stream key 
 ENV APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY  ''
 # Location where AppInsights stores its data
 ENV LOCALAPPDATA '/app_insights_data'
@@ -296,12 +296,12 @@ docker login --username <username> --password <password> <login server>
 docker push your_registry_name.azurecr.io/your_custom_image_name:tag
 ```
 
-## Run your container in ACI
-Running your container in Azure Container Instances is easy.  The easiest way is to open the Azure Portal to your ACR, select the repository and tag that corresponds to the image you just pushed, click on it and select "Run Instance."  This will create a new ACI instance of your image.
+## Run your container in Azure Container Instances
+Running your container in ACI is easy.  The easiest way is to open the Azure Portal to your ACR, select the repository and tag that corresponds to the image you just pushed, click on it and select "Run Instance."  This will create a new ACI instance of your image.
 
 ### Issue requests to your hosted API
 Now that your service is running within ACI, we can issue requests to it.
-1. Open the Azure Portal to your ACI. Click on the "Overview" tab and copy the "IP address."
+1. Open the Azure Portal to your ACI. Click on the "Overview" tab and copy the "IP address".
 2. In your API tool, change localhost:port to the IP that you just copied.
 3. Issue your request.
 
