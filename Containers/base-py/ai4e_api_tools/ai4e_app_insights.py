@@ -105,6 +105,16 @@ class AppInsights(object):
         self._key_grantee = app.config.get(CONF_KEY_GRANTEE) or getenv(CONF_KEY_GRANTEE)
         self._key_ai4e = app.config.get(CONF_KEY_AI4E) or getenv(CONF_KEY_AI4E)
 
+        if (self._key_grantee and len(self._key_grantee.strip()) > 0):
+            self._key_grantee = self._key_grantee.strip()
+        else
+            self._key_grantee = None
+        
+        if (self._key_ai4e and len(self._key_ai4e.strip()) > 0):
+            self._key_ai4e = self._key_ai4e.strip()
+        else
+            self._key_ai4e = None
+
         if self._key_grantee:
             print("Grantee application insights key set.")
 

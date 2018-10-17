@@ -73,6 +73,7 @@ RUN R -e 'Sys.setenv(CURL_CA_BUNDLE="/utils/microsoft-r-open-3.4.3/lib64/R/lib/m
 
 RUN R -e 'install.packages("devtools");'
 RUN R -e 'install.packages("RCurl");'
+RUN R -e 'install.packages("sjmisc");'
 
 RUN apt-get update \
 && apt-get install -y \

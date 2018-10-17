@@ -4,6 +4,7 @@
 
 library(httr)
 library(jsonlite)
+library(sjmisc)
 
 APP_SVC_URL <- "https://dc.services.visualstudio.com/v2/track"
 
@@ -21,8 +22,16 @@ CONF_SERVICE_CONTAINER_VERSION <- Sys.getenv("SERVICE_CONTAINER_VERSION", unset=
 CONF_SERVICE_CONTAINER_NAME <- Sys.getenv("SERVICE_CONTAINER_NAME", unset="")
 IS_DEBUG <- Sys.getenv("DEBUG", unset=FALSE)
 
+if (nchar(trim(CONF_KEY_AI4E)) == 0) {
+  CONF_KEY_AI4E = NULL
+}
+
+if (nchar(trim(CONF_KEY_GRANTEE)) == 0) {
+  CONF_KEY_GRANTEE = NULL
+}
+
 log <- function(message, sev, taskId, additionalProperties){
-  if (CONF_KEY_GRANTEE != NULL && nchar(CONF_KEY_AI4E) > 5) {
+  if (CONF_KEY_GRANTEE != NULL) {
     payload <- get_payload(message, sev, CONF_KEY_GRANTEE, taskId, additionalProperties)
     if (IS_DEBUG) {
         print(payload)
@@ -33,7 +42,7 @@ log <- function(message, sev, taskId, additionalProperties){
       print(http_status(r))
     }
 
-    if (CONF_KEY_AI4E != NULL && nchar(CONF_KEY_AI4E) > 5){
+    if (CONF_KEY_AI4E != NULL){
       payload <- get_payload(message, sev, CONF_KEY_AI4E, taskId, additionalProperties)
       if (IS_DEBUG) {
         print(payload)
