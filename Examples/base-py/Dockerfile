@@ -33,6 +33,9 @@ ENV SERVICE_MODEL_FRAMEWORK "Python"
 ENV SERVICE_MODEL_FRAMEOWRK_VERSION "3.6.6"
 ENV SERVICE_MODEL_VERSION "1.0"
 
+# The API_PREFIX is the URL path that will occur after your domain and before your endpoints
+ENV API_PREFIX '/v1/my_api/tasker'
+
 # Expose the port that is to be used when calling your API
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \

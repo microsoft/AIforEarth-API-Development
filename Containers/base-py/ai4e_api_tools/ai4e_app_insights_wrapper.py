@@ -16,7 +16,10 @@ CONF_KEY_AI4E = CONF_PREFIX + "_AI4E_INSTRUMENTATIONKEY"
 
 class AI4EAppInsights(object):
     def __init__(self):
-        self.grantee_key = getenv(CONF_KEY_GRANTEE, None)
+        self.grantee_key = None
+        raw_key = getenv(CONF_KEY_GRANTEE, None)
+        if (raw_key and len(raw_key.strip()) > 0):
+            self.grantee_key = raw_key.strip()
 
         if (self.grantee_key):
             self.sender = AsynchronousSender()
