@@ -37,6 +37,7 @@ ENV CUSTOM_VISION_PREDICTION_KEY ''
 ENV CUSTOM_VISION_PROJECT_ID ''
 ENV CUSTOM_VISION_ITERATION_ID ''
 
+# The API_PREFIX is the URL path that will occur after your domain and before your endpoints
 ENV API_PREFIX '/v1/customvision/predict'
 
 # Expose the port that is to be used when calling your API

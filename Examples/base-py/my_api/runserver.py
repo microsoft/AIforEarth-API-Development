@@ -11,10 +11,11 @@ from ai4e_app_insights import AppInsights
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import AI4EWrapper
 import sys
+from os import getenv
 
 print("Creating Application")
 
-my_api_prefix = "/v1/my_api/tasker"
+api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
 api = Api(app)
 
@@ -25,7 +26,7 @@ appinsights = AppInsights(app)
 log = AI4EAppInsights()
 
 # Use the internal-container AI for Earth Task Manager (not for production use!).
-api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=my_api_prefix)
+api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
 
 ai4e_wrapper = AI4EWrapper(app)
 
@@ -34,7 +35,7 @@ def health_check():
     return "Health check OK"
 
 # POST, long-running/async API endpoint example
-@app.route(my_api_prefix + '/', methods=['POST'])
+@app.route(api_prefix + '/', methods=['POST'])
 def post():
     # The AddTask function returns a dictonary of task information:
     #   - uuid: taskId used to update/retrieve task status
@@ -58,7 +59,7 @@ def post():
     return 'TaskId: ' + taskId
 
 # GET, sync API endpoint example
-@app.route(my_api_prefix + '/echo/<string:text>', methods=['GET'])
+@app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
 def echo(text):
     # wrap_sync_endpoint wraps your function within a logging trace.
     return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:my_long_running_funct", echo_text=text)
