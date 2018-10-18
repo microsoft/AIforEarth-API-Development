@@ -235,23 +235,32 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The Dockerfile also contains several environment variables that should be set for proper logging.  Follow the instructions within the Dockerfile to update it with your two Application Insight keys.
+The service_settings.env file contains several environment variables that should be set for proper logging.  Follow the instructions within the file.
 ```Dockerfile
-# Set the following env var to your AppInsights instrumentation key
-ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
-# Optional live metrics stream key 
-ENV APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY  ''
+# Logging Variables ----------------------------------------------------
+# All logging and metric collection flows through Application Insights
+# Set the following env var to your AppInsights instrumentation key.
+APPINSIGHTS_INSTRUMENTATIONKEY=
+# Optional live metrics stream key
+# https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements
+APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY=
 # Location where AppInsights stores its data
-ENV LOCALAPPDATA '/app_insights_data'
+LOCALAPPDATA=/app_insights_data
 # Internal address of the OpenCensus tracer (for sending traces to AppInsights)
-ENV OCAGENT_TRACE_EXPORTER_ENDPOINT 'localhost:55678'
+OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
 # The following variables will allow you to filter logs in AppInsights
-ENV SERVICE_OWNER "AI4E_Test"
-ENV SERVICE_CLUSTER "Local Docker"
-ENV SERVICE_MODEL_NAME "base-r example"
-ENV SERVICE_MODEL_FRAMEWORK "R"
-ENV SERVICE_MODEL_FRAMEOWRK_VERSION "microsoft-r-open-3.4.3"
-ENV SERVICE_MODEL_VERSION "1.0"
+SERVICE_OWNER=AI4E_Test
+SERVICE_CLUSTER=Local Docker
+SERVICE_MODEL_NAME=base-py example
+SERVICE_MODEL_FRAMEWORK=Python
+SERVICE_MODEL_FRAMEOWRK_VERSION=3.6.6
+SERVICE_MODEL_VERSION=1.0
+# End Logging Variables ------------------------------------------------
+
+# Service Variables ----------------------------------------------------
+# The API_PREFIX is the URL path that will occur after your domain and before your endpoints
+API_PREFIX=/v1/my_api/tasker
+# End Service Variables ----------------------------------------------------
 ```
 You may modify other environment variables as well.  In particular, you may want to change the environment variable API_PREFIX.  We recommend using the format "/\<version-number>/\<api-name>/\<function>" such as "/v1/my_api/tasker".  
 
@@ -274,9 +283,9 @@ docker build . -t your_registry_name.azurecr.io/your_custom_image_name:1
 ### Run your image, locally
 Run a container based on your image:
 ```Bash
-docker run -p 8081:80 "your_custom_image_name:1"
+docker run --env-file=service_settings.env -p 8081:80 "customvisionsample:1"
 ```
-In the above command, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
+In the above command, --env-file lets you pass in an environment variable file, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
 ```Dockerfile
 EXPOSE 80
 ```
