@@ -31,8 +31,8 @@ RUN chmod +x /startup.sh
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
-#ENTRYPOINT [ "/startup.sh" ]
+ENTRYPOINT [ "/startup.sh" ]
 
 # Replace the above entrypoint with the following one for faster debugging.
-ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
-CMD ["/app/my_api/api_example.R"]
+#ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
+#CMD ["/app/my_api/api_example.R"]

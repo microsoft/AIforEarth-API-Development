@@ -42,7 +42,7 @@ RUN wget -O rtvs-daemon.tar.gz https://aka.ms/r-remote-services-linux-binary-cur
     ./rtvsd/rtvs-install -s
 
 RUN mkdir /tmp/mro && cd /tmp/mro \
-  && wget -O microsoft-r-open.tar.gz https://mran.blob.core.windows.net/install/mro/3.4.3/microsoft-r-open-3.4.3.tar.gz \
+  && wget -O microsoft-r-open.tar.gz https://mran.blob.core.windows.net/install/mro/3.5.1/microsoft-r-open-3.5.1.tar.gz \
   && tar -xvzf microsoft-r-open.tar.gz \
   && /tmp/mro/microsoft-r-open/install.sh --accept-mkl-eula -u
 
