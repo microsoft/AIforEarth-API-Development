@@ -290,6 +290,7 @@ docker ps
 # Find the container ID in the list from the previous command, and replace <container-id> with that value to end the process
 docker kill <container-id> 
 ```
+Then you can execute your docker build and docker run commands again.  Additionally, the docker logs are located in your user account's AppData\Local\Docker folder (i.e. C:\Users\jennmar\AppData\Local\Docker).  
 
 
 ## Make requests
