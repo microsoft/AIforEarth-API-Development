@@ -28,6 +28,8 @@ log = AI4EAppInsights()
 # Use the internal-container AI for Earth Task Manager (not for production use!).
 api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
 
+# Use the AI4EWrapper to executes your functions within a logging trace.
+# Also, helps support long-running/async functions.
 ai4e_wrapper = AI4EWrapper(app)
 
 @app.route('/', methods=['GET'])

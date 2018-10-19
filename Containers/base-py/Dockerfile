@@ -1,4 +1,4 @@
-#ai4eregistry.azurecr.io/1.0-base-py-ubuntu16.04:subversion
+#mcr.microsoft.com/aiforearth/base-py:version
 FROM nvidia/cuda:9.2-runtime-ubuntu16.04
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8

@@ -1,5 +1,5 @@
-#ai4eregistry.azurecr.io/1.0-blob-r-ubuntu16.04:subversion
-FROM ai4eregistry.azurecr.io/1.0-base-r-ubuntu16.04:latest
+#mcr.microsoft.com/aiforearth/blob-r:version
+FROM mcr.microsoft.com/aiforearth/base-r:latest
 
 #############################################################################################
 # Add support for mounting an Azure blob
