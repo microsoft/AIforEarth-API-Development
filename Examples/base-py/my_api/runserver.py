@@ -28,6 +28,8 @@ log = AI4EAppInsights()
 # Use the internal-container AI for Earth Task Manager (not for production use!).
 api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
 
+# Use the AI4EWrapper to executes your functions within a logging trace.
+# Also, helps support long-running/async functions.
 ai4e_wrapper = AI4EWrapper(app)
 
 @app.route('/', methods=['GET'])
@@ -62,7 +64,7 @@ def post():
 @app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
 def echo(text):
     # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:my_long_running_funct", echo_text=text)
+    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:echo", echo_text=text)
 
 def my_long_running_funct(**kwargs):
     taskId = kwargs.get('taskId', None)

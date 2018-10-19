@@ -107,12 +107,12 @@ class AppInsights(object):
 
         if (self._key_grantee and len(self._key_grantee.strip()) > 0):
             self._key_grantee = self._key_grantee.strip()
-        else
+        else:
             self._key_grantee = None
         
         if (self._key_ai4e and len(self._key_ai4e.strip()) > 0):
             self._key_ai4e = self._key_ai4e.strip()
-        else
+        else:
             self._key_ai4e = None
 
         if self._key_grantee:

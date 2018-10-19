@@ -1,4 +1,4 @@
-FROM ai4eregistry.azurecr.io/1.0-base-r-ubuntu16.04:latest
+FROM mcr.microsoft.com/aiforearth/base-r:latest
 
 # Install fortran; required for adehabitat
 RUN apt-get --assume-yes install gfortran
@@ -13,6 +13,8 @@ RUN R -e 'install.packages("adehabitatLT"); library(adehabitatLT)'
 RUN R -e 'install.packages("trip"); library(trip)'
 RUN R -e 'install.packages("adehabitatHR"); library(adehabitatHR)'
 
+RUN R -e 'print(installed.packages());'
+
 # Note: supervisor.conf reflects the location and name of your api code.
 # If the default (./my_api/plumber_run.R) is renamed, you must change supervisor.conf
 # Copy your API code
@@ -20,23 +22,6 @@ RUN mkdir -p /app/my_api/
 WORKDIR /app/my_api/
 COPY ./my_api/ /app/my_api/
 COPY ./supervisord.conf /etc/supervisord.conf
-
-# All logging and metric collection flows through Application Insights
-# Set the following env var to your AppInsights instrumentation key.
-ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
-# Optional live metrics stream key, https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements
-ENV APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY  ''
-# Location where AppInsights stores its data
-ENV LOCALAPPDATA '/app_insights_data'
-# Internal address of the OpenCensus tracer (for sending traces to AppInsights)
-ENV OCAGENT_TRACE_EXPORTER_ENDPOINT 'localhost:55678'
-# The following variables will allow you to filter logs in AppInsights
-ENV SERVICE_OWNER "AI4E_Test"
-ENV SERVICE_CLUSTER "Local Docker"
-ENV SERVICE_MODEL_NAME "base-r example"
-ENV SERVICE_MODEL_FRAMEWORK "R"
-ENV SERVICE_MODEL_FRAMEOWRK_VERSION "microsoft-r-open-3.4.3"
-ENV SERVICE_MODEL_VERSION "1.0"
 
 # startup.sh is a helper script
 COPY ./startup.sh /

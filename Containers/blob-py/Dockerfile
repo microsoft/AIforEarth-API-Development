@@ -1,5 +1,5 @@
-#ai4eregistry.azurecr.io/1.0-blob-py-ubuntu16.04:subversion
-FROM ai4eregistry.azurecr.io/1.0-base-py-ubuntu16.04:latest
+#mcr.microsoft.com/aiforearth/blob-py:version
+FROM mcr.microsoft.com/aiforearth/base-py:latest
 
 #############################################################################################
 # Add support for mounting an Azure blob
