@@ -1,4 +1,4 @@
-FROM ai4eregistry.azurecr.io/1.0-blob-py-ubuntu16.04:latest
+FROM mcr.microsoft.com/aiforearth/blob-py:latest
 
 # Copy blob connection information
 COPY ./blob_mount.json /app/fuse/blob_mount.json

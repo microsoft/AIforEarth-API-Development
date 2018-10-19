@@ -180,7 +180,7 @@ from flask import send_file
 
 ACCEPTED_CONTENT_TYPES = ['image/tiff', 'application/octet-stream']
 
-if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
+if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     tiff_file = tifffile.imread(BytesIO(request.data))
     # Do something with the tiff_file...
     prediction_stream = BytesIO()

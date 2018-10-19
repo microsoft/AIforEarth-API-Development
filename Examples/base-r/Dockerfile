@@ -1,4 +1,4 @@
-FROM ai4eregistry.azurecr.io/1.0-base-r-ubuntu16.04:latest
+FROM mcr.microsoft.com/aiforearth/base-r:latest
 
 # Install fortran; required for adehabitat
 RUN apt-get --assume-yes install gfortran
@@ -12,6 +12,8 @@ RUN R -e 'install.packages("adehabitatMA"); library(adehabitatMA)'
 RUN R -e 'install.packages("adehabitatLT"); library(adehabitatLT)'
 RUN R -e 'install.packages("trip"); library(trip)'
 RUN R -e 'install.packages("adehabitatHR"); library(adehabitatHR)'
+
+RUN R -e 'print(installed.packages());'
 
 # Note: supervisor.conf reflects the location and name of your api code.
 # If the default (./my_api/plumber_run.R) is renamed, you must change supervisor.conf
@@ -29,8 +31,8 @@ RUN chmod +x /startup.sh
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
-ENTRYPOINT [ "/startup.sh" ]
+#ENTRYPOINT [ "/startup.sh" ]
 
 # Replace the above entrypoint with the following one for faster debugging.
-#ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
-#CMD ["/app/my_api/api_example.R"]
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
+CMD ["/app/my_api/api_example.R"]

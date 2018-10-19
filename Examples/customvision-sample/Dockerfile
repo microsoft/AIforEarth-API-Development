@@ -1,4 +1,4 @@
-FROM ai4eregistry.azurecr.io/1.0-base-py-ubuntu16.04:latest
+FROM mcr.microsoft.com/aiforearth/base-py:latest
 
 RUN pip install azure-cognitiveservices-vision-customvision
 
