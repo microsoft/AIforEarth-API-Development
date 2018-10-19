@@ -24,6 +24,7 @@ api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
 api = Api(app)
 print(api_prefix)
+
 # Log requests, traces and exceptions to the Application Insights service
 appinsights = AppInsights(app)
 
@@ -63,10 +64,15 @@ def predict_image(**kwargs):
         # Extract the img_url input from the json body
         test_img_url = json_body["img_url"]
 
+        # Here's how to debug
+        print(test_img_url)         # You can check this in Postman 
+        log.log_debug(test_img_url) # You can check this in Application Insights
+
         # Call the Custom Vision service endpoint
         predictor = prediction_endpoint.PredictionEndpoint(prediction_key)
         results = predictor.predict_image_url(project_id, iteration_id, url=test_img_url)
 
+        # Construct the predictions for output
         ret = []
         for prediction in results.predictions:
             pred = {}
