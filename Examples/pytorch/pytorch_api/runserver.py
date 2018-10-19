@@ -13,7 +13,7 @@ from os import getenv
 
 print("Creating Application")
 
-ACCEPTED_CONTENT_TYPES = ['image/png', 'application/octet-stream']
+ACCEPTED_CONTENT_TYPES = ['image/png', 'application/octet-stream', 'image/jpeg']
 
 api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
@@ -45,13 +45,13 @@ def health_check():
 @app.route(api_prefix + '/classify', methods=['POST'])
 def post():
     if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
-        return abort(415, "Unable to process request. Only png files are accepted as input")
+        return abort(415, "Unable to process request. Only png or jpeg files are accepted as input")
 
     try:
         image = BytesIO(request.data)
     except:
         return 'Unable to open the image.'
-    return ai4e_wrapper.wrap_sync_endpoint(classify, "post:detect", image_bytes=image)
+    return ai4e_wrapper.wrap_sync_endpoint(classify, "post:classify", image_bytes=image)
 
 def classify(**kwargs):
     print('runserver.py: classify() called...')
@@ -68,7 +68,7 @@ def classify(**kwargs):
 @app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
 def echo(text):
     # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:my_long_running_funct", echo_text=text)
+    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "GET:echo", echo_text=text)
 
 def my_sync_function(**kwargs):
     echo_text = kwargs.get('echo_text', '')
