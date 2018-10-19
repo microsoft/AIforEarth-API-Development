@@ -22,7 +22,7 @@ If you changed the name of the destination folder in the Dockerfile where your A
 
 ## Example service
 
-This example API endpoint takes an input image, performs object detection on it, renders the bounding boxes on the image and returns that image. This is to demonstrate how to handle image input and output. Realistically you would probably return the coordinates of the bounding boxes and predicted categories in a json, rather than the rendered image.
+This example API endpoint takes an input image, performs image classification on it, and returns a string that indicates the most likely category (a numerical label for each of the 8142 species in the iNat categories) the classifier has determined. You can look up what category these numerical labels correspond to from the file downloadable on the iNat 2018 GitHub page (see first point in the Updates section).
 
 Build the docker image:
 ```
