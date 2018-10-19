@@ -64,7 +64,7 @@ def post():
 @app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
 def echo(text):
     # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:my_long_running_funct", echo_text=text)
+    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:echo", echo_text=text)
 
 def my_long_running_funct(**kwargs):
     taskId = kwargs.get('taskId', None)
