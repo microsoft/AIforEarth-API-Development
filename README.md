@@ -58,9 +58,7 @@ These images and examples are meant to illustrate how to build containers for us
 - Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.
 
 # Quickstart
-1. [Choose a base image or start with an example](#Choose-a-base-image-or-example)
-2. [Insert code to call your model](#Insert-code-to-call-your-model)
-3. [Input handling](#Input-handling)
+This quickstart will walk you through turning a model into an API.  Starting with a trained model, we will containerize it, deploy it on Azure, and expose an endpoint to call the API.  We will leverage Docker containers, Azure Application Insights, Azure Container Registry, and Azure Container Instances.  
 
 ## Choose a base image or example
 AI for Earth APIs are all built from an AI for Earth base image.  You may use a base image directly or start with an example.  The following sections will help you decide.
@@ -75,10 +73,14 @@ AI for Earth APIs are all built from an AI for Earth base image.  You may use a 
 - Basic Python API (Sync and Async)
 - Basic R API (Sync and Async)
 - Blob Python API
-- Synchronous Azure ML API
+- Synchronous Custom Vision API (Python) 
 - Synchronous PyTorch API
 
+After you've chosen the example that best fits your scenario, make a copy of that directory, which you can use as your working directory in which you apply your changes.  
+
 ## Insert code to call your model
+Next, in your new working directory, we need to update the example that you chose with code to call your specific model.  This should be done in the runserver.py file (if you are using a Python example) or the api_example.R file (if you are using an R example) in the my_api (or similarly named) subfolder.  
+
 All examples contain the text "#INSERT_YOUR_MODEL_CALL_HERE".  This is intended to be a starting point to quickly get your API running with your model.  Simply adding your model will not perform necessary input checking, error handling, etc.
 
 ## Input handling
@@ -187,15 +189,19 @@ if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  
+
+Create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) and get your instrumentation key by following the instructions in the [below link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource) (you can stop after the "Copy the instrumentation key" step).  Then, follow the instructions from the [second link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements) to create a live stream key as well.  Store both of these keys in a safe place.   
+
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
-The instrumentation key is for general logging and tracing.
+The instrumentation key is for general logging and tracing.  This is found under the "Properties" section for your Application Insights instance in the Azure portal. 
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
 
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
 
 ### Edit LocalForwarder.config
-If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys:
+If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys (be sure to add the proper key in the right place as shown below - you will use your instrumentation key twice and your live metrics key once):
 ```Xml
   <OpenCensusToApplicationInsights>
     <InstrumentationKey>your_instrumentation_key_goes_here</InstrumentationKey>
@@ -208,7 +214,7 @@ If you are using a Python-based image and would like to take advantage of tracin
 ```
 
 ## Install required packages
-Update the Dockerfile to install any required packages. There are several ways to install packages.  We cover popular ones here:
+Now, let's look at the Dockerfile in your code.  Update the Dockerfile to install any required packages. There are several ways to install packages.  We cover popular ones here:
 - pip
 ```Dockerfile
 RUN /usr/local/envs/ai4e_py_api/bin/pip install grpcio opencensus
@@ -229,7 +235,7 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The Dockerfiles contain several environment variables that should be set for proper logging.  Follow the instructions within the Dockerfile.
+The Dockerfile also contains several environment variables that should be set for proper logging.  Follow the instructions within the Dockerfile to update it with your two Application Insight keys.
 ```Dockerfile
 # Set the following env var to your AppInsights instrumentation key
 ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
@@ -247,6 +253,7 @@ ENV SERVICE_MODEL_FRAMEWORK "R"
 ENV SERVICE_MODEL_FRAMEOWRK_VERSION "microsoft-r-open-3.4.3"
 ENV SERVICE_MODEL_VERSION "1.0"
 ```
+You may modify other environment variables as well.  In particular, you may want to change the environment variable API_PREFIX.  We recommend using the format "/\<version-number>/\<api-name>/\<function>" such as "/v1/my_api/tasker".  
 
 ## Build and run your image
 This section features a step-by-step guide to building and running your image.
@@ -265,14 +272,25 @@ docker build . -t your_registry_name.azurecr.io/your_custom_image_name:1
 ```
 
 ### Run your image, locally
-1. Run a container based on your image:
+Run a container based on your image:
 ```Bash
-docker run -p 8081:80 "customvisionsample:1"
+docker run -p 8081:80 "your_custom_image_name:1"
 ```
 In the above command, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
 ```Dockerfile
 EXPOSE 80
 ```
+TIP: Depending on your git settings and your operating system, the "docker run" command may fail with the error 'standard_init_linux.go:190: exec user process caused "no such file or directory"'.  If this happens, you need to change the end-of-line characters in startup.sh to LF.  One way to do this is using VS Code; open the startup.sh file and click on CRLF in the bottom right corner in the blue bar and select LF instead, then save.
+
+If you find that there are errors and you need to go back and rebuild your docker container, run the following commands:
+```Bash
+# This lists all of the docker processes running
+docker ps
+
+# Find the container ID in the list from the previous command, and replace <container-id> with that value to end the process
+docker kill <container-id> 
+```
+
 
 ## Make requests
 Now that you have a local instance of your contianer running, you should issue requests and debug it, locally.  For this exercise, you may issue requests in whatever way that you would like, but we prefer using [Postman](#https://www.getpostman.com/) to quickly test our endpoints.
