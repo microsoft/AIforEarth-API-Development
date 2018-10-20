@@ -57,7 +57,7 @@ class SasBlob:
 
         token = block_blob_service.generate_container_shared_access_signature(
             container_name,
-            ContainerPermissions.WRITE + ContainerPermissions.READ,
+            ContainerPermissions.WRITE + ContainerPermissions.READ + ContainerPermissions.LIST,
             datetime.utcnow() + timedelta(hours=access_duration_hrs))
 
         return block_blob_service.make_container_url(container_name=container_name, sas_token=token).replace("restype=container", "")
