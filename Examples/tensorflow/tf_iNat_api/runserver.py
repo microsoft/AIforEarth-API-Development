@@ -13,6 +13,7 @@ from io import BytesIO
 from os import getenv
 import uuid
 import sys
+import numpy as np
 
 print("Creating Application")
 
@@ -65,23 +66,27 @@ def post():
 def detect(**kwargs):
     print('runserver.py: detect() called, generating detections...')
     taskId = kwargs.get('taskId', None)
-    image = kwargs.get('image', None)
+    image_bytes = kwargs.get('image', None)
 
     # Update the task status, so the caller knows it has been accepted and is running.
     api_task_manager.UpdateTaskStatus(taskId, 'running - generate_detections')
 
     try:
         boxes, scores, clsses, image = tf_detector.generate_detections(
-            detection_graph, image)
+            detection_graph, image_bytes)
 
         api_task_manager.UpdateTaskStatus(taskId, 'rendering boxes')
-        print('runserver.py: detections generated, rendering boxes...')
+
         # image is modified in place
         # here confidence_threshold is hardcoded, but you can ask that as a input from the request
         tf_detector.render_bounding_boxes(
             boxes, scores, clsses, image, confidence_threshold=0.5)
 
-        image.seek(0)
+        print('runserver.py: detect(), rendering and saving result image...')
+        # save the PIL Image object to a ByteIO stream so that it can be written to blob storage
+        output_img_stream = BytesIO()
+        image.save(output_img_stream, format='jpeg')
+        output_img_stream.seek(0)
 
         sas_blob_helper = SasBlob()
         # Create a unique name for a blob container
@@ -91,9 +96,10 @@ def detect(**kwargs):
         sas_url = sas_blob_helper.create_writable_container_sas(getenv('STORAGE_ACCOUNT_NAME'), getenv('STORAGE_ACCOUNT_KEY'), container_name, blob_access_duration_hrs)
 
         # Write the image to the blob
-        sas_blob_helper.write_blob(sas_url, 'detect_output.jpg', image)
+        sas_blob_helper.write_blob(sas_url, 'detect_output.jpg', output_img_stream)
         
         api_task_manager.UpdateTaskStatus(taskId, 'completed - output written to: ' + sas_url)
+        print('runserver.py: detect() finished.')
     except:
         log.log_exception(sys.exc_info()[0], taskId)
         api_task_manager.UpdateTaskStatus(taskId, 'failed: ' + str(sys.exc_info()[0]))

@@ -41,9 +41,9 @@ def generate_detections(detection_graph, image):
     Returns:
         boxes, scores, classes, and the image loaded from the input image_file - for one image
     """
-    img = Image.open(image)
+    image = Image.open(image)
 
-    image_np = np.asarray(img, np.uint8)
+    image_np = np.asarray(image, np.uint8)
     image_np = image_np[:, :, :3] # Remove the alpha channel
 
     #with detection_graph.as_default():
@@ -85,6 +85,7 @@ def render_bounding_boxes(boxes, scores, classes, image, label_map={}, confidenc
 
     for box, score, clss in zip(boxes, scores, classes):
         if score > confidence_threshold:
+            print('Confidence of detection greater than threshold: ', score)
             display_boxes.append(box)
             clss = int(clss)
             label = label_map[clss] if clss in label_map else str(clss)
@@ -93,7 +94,6 @@ def render_bounding_boxes(boxes, scores, classes, image, label_map={}, confidenc
 
     display_boxes = np.array(display_boxes)
     draw_bounding_boxes_on_image(image, display_boxes, display_str_list_list=display_strs)
-
 
 # the following two functions are from https://github.com/tensorflow/models/blob/master/research/object_detection/utils/visualization_utils.py
 
@@ -165,11 +165,6 @@ def draw_bounding_box_on_image(image,
       ymin, xmin, ymax, xmax as relative to the image.  Otherwise treat
       coordinates as absolute.
   """
-  image = Image.open(image)
-
-    #image_np = np.asarray(img, np.uint8)
-    #image_np = image_np[:, :, :3] # Remove the alpha channel
-
   draw = ImageDraw.Draw(image)
   im_width, im_height = image.size
   if use_normalized_coordinates:
