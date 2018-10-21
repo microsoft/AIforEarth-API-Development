@@ -44,7 +44,7 @@ detection_graph = tf_detector.load_model(model_path)
 def health_check():
     return "Health check OK"
 
-# POST, sync API endpoint example
+# POST, async API endpoint example
 @app.route(api_prefix + '/detect', methods=['POST'])
 def post():
     if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
