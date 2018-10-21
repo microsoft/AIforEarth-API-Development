@@ -1,6 +1,6 @@
 # TensorFlow example
 
-This example shows you how to deploy a TensorFlow model via an AI for Earth container. In this example we use an object detection model trained on either the iNaturalist 2018 dataset or the COCO Dataset.
+This example shows you how to deploy a TensorFlow model via an AI for Earth container. In this example we use an object detection model trained on the iNaturalist 2018 dataset.
 
 In this example, a user will send an image to the API via POST. It is a long-running API, so a task id will be returned when the endpoint is called. The API creates a SAS-keyed container within the API owner's Azure storage account.  The SAS URL is returned to the caller via a status update.
 
