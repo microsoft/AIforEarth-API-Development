@@ -46,7 +46,7 @@ These images and examples are meant to illustrate how to build containers for us
 - Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.
 
 # Quickstart Tutorial
-A quickstart tutorial for converting a trained machine learning model to an API can be found at [Quickstart.md](.\Quickstart.md).  
+A quickstart tutorial for converting a trained machine learning model to an API can be found at [Quickstart.md](Quickstart.md).  
 
 # Grantee Onboarding Procedure
 AI for Earth Grantees may onboard their models/code to Azure and, in most cases, surface their solution as a private API or an AI for Earth API.  This section describes the fastest path to obtaining this result.
