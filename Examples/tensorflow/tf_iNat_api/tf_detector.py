@@ -31,18 +31,33 @@ def load_model(checkpoint):
     return detection_graph
 
 
+def open_image(image_bytes):
+    """ Open an image in binary format using PIL.Image and convert to RGB mode
+    Args:
+        image_bytes: an image in binary format read from the POST request's body
+
+    Returns:
+        an PIL image object in RGB mode
+    """
+    image = Image.open(image_bytes)
+    if image.mode not in ('RGBA', 'RGB'):
+        raise AttributeError('Input image not in RGBA or RGB mode and cannot be processed.')
+    if image.mode == 'RGBA':
+        # Image.convert() returns a converted copy of this image
+        image = image.convert(mode='RGB')
+    return image
+
+
 def generate_detections(detection_graph, image):
     """ Generates a set of bounding boxes with confidence and class prediction for one input image file.
 
     Args:
-        detection_graph: a already loaded inference graph.
-        image_file: a file or path that can be opened by PIL's Image.open(), or a PIL Image object
+        detection_graph: an already loaded object detection inference graph.
+        image_file: a PIL Image object
 
     Returns:
         boxes, scores, classes, and the image loaded from the input image_file - for one image
     """
-    image = Image.open(image)
-
     image_np = np.asarray(image, np.uint8)
     image_np = image_np[:, :, :3] # Remove the alpha channel
 

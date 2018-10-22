@@ -27,7 +27,7 @@ You can download sample images from the iNat 2018 dataset from this [site](https
 
 This example API endpoint takes an input image, performs object detection on it, renders the bounding boxes on the image (only if the confidence of the detected box is above 0.5, which is the `confidence_threshold` you can change in `tf_iNat_api/runserver.py`) and returns the annotated image. This is to demonstrate how to handle image input and output. Realistically you would probably return the coordinates of the bounding boxes and predicted categories in a json, rather than the rendered image.
 
-Build the docker image:
+Build the docker image (need to be in the Examples/tensorflow directory where the `Dockerfile` is):
 ```
 docker build . -t tensorflow_example:1
 ```

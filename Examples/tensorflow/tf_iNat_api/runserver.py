@@ -72,8 +72,9 @@ def detect(**kwargs):
     api_task_manager.UpdateTaskStatus(taskId, 'running - generate_detections')
 
     try:
+        image = tf_detector.open_image(image_bytes)
         boxes, scores, clsses, image = tf_detector.generate_detections(
-            detection_graph, image_bytes)
+            detection_graph, image)
 
         api_task_manager.UpdateTaskStatus(taskId, 'rendering boxes')
 
@@ -93,7 +94,8 @@ def detect(**kwargs):
         container_name = str(uuid.uuid4()).replace('-','')
 
         # Create a writable sas container and return its url
-        sas_url = sas_blob_helper.create_writable_container_sas(getenv('STORAGE_ACCOUNT_NAME'), getenv('STORAGE_ACCOUNT_KEY'), container_name, blob_access_duration_hrs)
+        sas_url = sas_blob_helper.create_writable_container_sas(
+            getenv('STORAGE_ACCOUNT_NAME'), getenv('STORAGE_ACCOUNT_KEY'), container_name, blob_access_duration_hrs)
 
         # Write the image to the blob
         sas_blob_helper.write_blob(sas_url, 'detect_output.jpg', output_img_stream)
