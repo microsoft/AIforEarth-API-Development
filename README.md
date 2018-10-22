@@ -58,10 +58,21 @@ These images and examples are meant to illustrate how to build containers for us
 - Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.
 
 # Quickstart
-This quickstart will walk you through turning a model into an API.  Starting with a trained model, we will containerize it, deploy it on Azure, and expose an endpoint to call the API.  We will leverage Docker containers, Azure Application Insights, Azure Container Registry, and Azure Container Instances.  
+This quickstart will walk you through turning a model into an API.  Starting with a trained model, we will containerize it, deploy it on Azure, and expose an endpoint to call the API.  We will leverage Docker containers, [Azure Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview), [Azure Container Registry](https://docs.microsoft.com/en-us/azure/container-registry/), and [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/).  
+
+We are assuming that you have a trained model that you want to expose as an API.  To begin, download or clone this repository to your local machine.  
+
+Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
+
+## Machine Setup 
+You will need an active Azure subscription as well as the following software installed.
++ [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
++ [Docker Desktop](https://www.docker.com/products/docker-desktop)
++ [Postman](https://www.getpostman.com/apps)
++ Any [Python](https://www.python.org/downloads/)/[R](https://www.r-project.org/)/etc. environment you need to invoke your model
 
 ## Choose a base image or example
-AI for Earth APIs are all built from an AI for Earth base image.  You may use a base image directly or start with an example.  The following sections will help you decide.
+AI for Earth APIs are all built from an AI for Earth base image.  The [Repo Layout section of the README](https://github.com/Microsoft/AIforEarth-API-Development#repo-layout) details what each base image contains.  You may use a base image directly or start with an example.  The following sections will help you decide.
 
 ### Base images
 - base-py
@@ -76,14 +87,29 @@ AI for Earth APIs are all built from an AI for Earth base image.  You may use a 
 - Synchronous Custom Vision API (Python) 
 - Synchronous PyTorch API
 
+In general, if you're using Python, you will want to use an image or example with the base-py or blob-py images.  If you are using R, you will want to use an image or example with the base-r or blob-r images.  The difference between them: the blob-* image contains everything that the cooresponding base-* image contains, plus additional support for mounting [Azure blob storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).  This may be useful if you need to process (for example) a batch of images all at once; you can upload them all to Azure blob storage, the container in which your model is running can mount that storage, and access it like it is local storage.  
+
+In addition to your language choice, you should think about whether your API call should be synchronous or asynchronous.  A synchronous API call will invoke your model, get results, and return immediately.  This is a good paradigm to use if you want to perform classification with your model on a single image, for example.  An asynchronous API call should be used for long-running tasks, like processing a whole folder of images, performing object detection on each image with your model, and storing the results.  
+
+We have provided several examples that leverage these base images to make it easier for you to get started.  
+- **base-py:** Start with this example if you are using Python and don't need Azure blob storage integration, and none of the below more specific examples are a good fit.  It contains both synchronous and asynchronous endpoints.  It is a great example to use for asynchronous, long-running API calls.  
+- **base-r:** Start with this example if you are using R.  
+- **blob-mount-py:** Start with this example if you are using Python and you need Azure blob storage integration.  
+- **customvision-sample:** This example is a modification of the base-py example, using a synchronous API call to call a Custom Vision model.  It is a great example to use if you are using a Custom Vision model or if you are making a synchronous API call.  
+- **pytorch:** This example is a modification of the base-py example, using a synchronous API call to call a PyTorch model.  It is a great example to use if you are using PyTorch or if you are making a synchronous API call.  
+- **tensorflow:** This example is a modification of the base-py example, using an asynchronous API call to call a TensorFlow model.  It is a great example to use if you are using TensorFlow or if you are making an asynchronous API call.  
+
 After you've chosen the example that best fits your scenario, make a copy of that directory, which you can use as your working directory in which you apply your changes.  
 
 ## Insert code to call your model
 Next, in your new working directory, we need to update the example that you chose with code to call your specific model.  This should be done in the runserver.py file (if you are using a Python example) or the api_example.R file (if you are using an R example) in the my_api (or similarly named) subfolder.  
 
-All examples contain the text "#INSERT_YOUR_MODEL_CALL_HERE".  This is intended to be a starting point to quickly get your API running with your model.  Simply adding your model will not perform necessary input checking, error handling, etc.
+All examples contain the text "#INSERT_YOUR_MODEL_CALL_HERE".  This is intended to be a starting point to quickly get your API running with your model.  Simply adding your model will not perform necessary input checking, error handling, etc.  We strongly recommend that you implement these best practices as well.  
 
 ## Input handling
+Your model has inputs and outputs.  For example, let's consider a classification model that takes an image and classifies its contents as one of multiple species of animal.  The input that you need to provide to this model is an image, and the output that you provide may be JSON-formatted text of the classifications and their confidence.  
+
+Some examples of how to send parameters as inputs into your APIs follow.  
 
 #### GET URL parameters
 For GET operations, best practice dictates that a noun is used in the URL in the segment before the related parameter.  An echo example is as follows.
@@ -140,10 +166,10 @@ ProcessDataAPI<-function(req, res){
 ```
 
 ## Output handling
-Two return types are important when dealing with hosted ML APIs: non-binary and binary.
+Then, you need to send back your model's results as output.  Two return types are important when dealing with hosted ML APIs: non-binary and binary.
 
 #### Non-binary data
-The preferred method to return non-binary data is to use JSON.
+You may need to return non-binary data, like simple strings or numbers.  The preferred method to return non-binary data is to use JSON.
 
 ##### Python and Flask
 
@@ -151,10 +177,10 @@ The preferred method to return non-binary data is to use JSON.
 import json
 def post(self):
     ret = {}
-    ret['run_id'] = 'myrunid'
+    ret['run_id'] = myrunid   
     ret['container_uri'] = 'https://myblobacct.blob.core.windows.net/user?st=2018-08-02T12%3A01%3A00Z&se=5200-08-03T12%3A01%3A00Z&sp=rwl&sv=2017-04-17&sr=c&sig=xxx'
 
-    return dumps(ret)
+    return json.dumps(ret)   
 ```
 
 ##### R and Plumber
@@ -169,7 +195,7 @@ ProcessDataAPI<-function(req, res){
 ```
 
 #### Binary data
-Binary data includes images.
+You may also need to return binary data, like images.
 
 ##### Python and Flask
 
@@ -235,7 +261,7 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The service_settings.env file contains several environment variables that should be set for proper logging.  Follow the instructions within the file.
+The service_settings.env file contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
 ```Dockerfile
 # Logging Variables ----------------------------------------------------
 # All logging and metric collection flows through Application Insights
@@ -264,6 +290,10 @@ API_PREFIX=/v1/my_api/tasker
 ```
 You may modify other environment variables as well.  In particular, you may want to change the environment variable API_PREFIX.  We recommend using the format "/\<version-number>/\<api-name>/\<function>" such as "/v1/my_api/tasker".  
 
+## (Optional) Set up Azure blob storage
+If you are using the blob-mount-py example or either of the base images with blob storage integration, you must also modify the **blob_mount.json** file to provide your Azure blob storage account settings.  
+
+
 ## Build and run your image
 This section features a step-by-step guide to building and running your image.
 
@@ -283,7 +313,7 @@ docker build . -t your_registry_name.azurecr.io/your_custom_image_name:1
 ### Run your image, locally
 Run a container based on your image:
 ```Bash
-docker run --env-file=service_settings.env -p 8081:80 "customvisionsample:1"
+docker run --env-file=service_settings.env -p 8081:80 "your_custom_image_name:1"
 ```
 In the above command, --env-file lets you pass in an environment variable file, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
 ```Dockerfile
@@ -299,10 +329,11 @@ docker ps
 # Find the container ID in the list from the previous command, and replace <container-id> with that value to end the process
 docker kill <container-id> 
 ```
+Then you can execute your docker build and docker run commands again.  Additionally, the docker logs are located in your user account's AppData\Local\Docker folder (i.e. C:\Users\jennmar\AppData\Local\Docker).  
 
 
 ## Make requests
-Now that you have a local instance of your contianer running, you should issue requests and debug it, locally.  For this exercise, you may issue requests in whatever way that you would like, but we prefer using [Postman](#https://www.getpostman.com/) to quickly test our endpoints.
+Now that you have a local instance of your container running, you should issue requests and debug it, locally.  For this exercise, you may issue requests in whatever way that you would like, but we prefer using [Postman](#https://www.getpostman.com/) to quickly test our endpoints.
 
 ### Test endpoints
 1. Open Postman or your favorite API development tool.
@@ -333,6 +364,27 @@ Now that your service is running within ACI, we can issue requests to it.
 3. Issue your request.
 
 To see logs/console output in your running container, click on "Containers" in your ACI in the Azure Portal and click the "Logs" tab.  If you configured Application Insights, you may use that to review logs, identify issues, and view metrics.
+
+## Conclusion and Next Steps
+Congratulations!  You have successfully hosted a model in Azure and exposed it to be accessed as an API.  
+
+### Cost implications
+The services we used today are very reasonably priced.  Here are the pricing details.
++ [Azure Application Insights Pricing](https://azure.microsoft.com/en-us/pricing/details/monitor/)
++ [Azure Container Registry Pricing](https://azure.microsoft.com/en-us/pricing/details/container-registry/)
++ [Azure Container Instances Pricing](https://azure.microsoft.com/en-us/pricing/details/container-instances/)
++ [Azure Blob Storage Pricing](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/)
+
+### How to remove Azure resources
+We hope you find this a valuable way to provide access to your machine learning model.  But if you don't plan to use your API immediately and you want to release these resources in Azure to reduce your costs, you may do so.  If you put all resources in a single resource group, then you can navigate to the [Azure portal](https://portal.azure.com), click on "Resource Groups", and select the resource group that you have been using throughout this tutorial.  From there, you can select "Delete resource group" and remove all of the resources at once.  (If you didn't add them all to the same resource group, you can delete them all separately.)
+
+![Delete Resource Group](.\Examples\screenshots\QuickstartResourceGroup.jpg)
+
+
+### Next Steps
+Upon completion of this quickstart tutorial, you may want to investigate the following.  
++ [Azure API Management](https://docs.microsoft.com/en-us/azure/api-management/): Integration with API Management will allow you to publish your APIs to external, partner, and employee developers securely and at scale.  
++ [Azure Kubernetes Services](https://docs.microsoft.com/en-us/azure/aks/intro-kubernetes): If you expect significant traffic, you may want to consider a managed Kubernetes cluster instead of a single Azure container instance for hosting your model.  
 
 ## FAQs
 - What is "my_api_prefix"?
