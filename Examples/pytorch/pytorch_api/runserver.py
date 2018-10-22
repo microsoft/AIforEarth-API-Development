@@ -47,10 +47,7 @@ def post():
     if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
         return abort(415, "Unable to process request. Only png or jpeg files are accepted as input")
 
-    try:
-        image = BytesIO(request.data)
-    except:
-        return 'Unable to open the image.'
+    image = BytesIO(request.data)
     return ai4e_wrapper.wrap_sync_endpoint(classify, "post:classify", image_bytes=image)
 
 def classify(**kwargs):
