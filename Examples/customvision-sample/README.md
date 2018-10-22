@@ -18,5 +18,5 @@ To obtain these, navigate to the [Custom Vision site](https://customvision.ai/),
 
 4. Scroll to the end of either of the Prediction URLs, and you will find the iteration ID.  Update the final Custom Vision setting in service_settings.env with this value.  
 
-Please ensure that you also change your inputs and outputs in the custom_vision_api\runserver.py file, update your Application Insights values for logging, and all of the other work items documented in the Quickstart.  
+Please ensure that you also change your inputs and outputs in the custom_vision_api\runserver.py file, update your Application Insights values for logging, and all of the other work items documented in the [Quickstart](../../Quickstart.md).  
 
