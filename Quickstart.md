@@ -334,7 +334,7 @@ The services we used today are very reasonably priced.  Here are the pricing det
 ### How to remove Azure resources
 We hope you find this a valuable way to provide access to your machine learning model.  But if you don't plan to use your API immediately and you want to release these resources in Azure to reduce your costs, you may do so.  If you put all resources in a single resource group, then you can navigate to the [Azure portal](https://portal.azure.com), click on "Resource Groups", and select the resource group that you have been using throughout this tutorial.  From there, you can select "Delete resource group" and remove all of the resources at once.  (If you didn't add them all to the same resource group, you can delete them all separately.)
 
-![Delete Resource Group](Examples\screenshots\QuickstartResourceGroup.jpg)
+![Delete Resource Group](Examples/screenshots/QuickstartResourceGroup.jpg)
 
 
 ### Next Steps
