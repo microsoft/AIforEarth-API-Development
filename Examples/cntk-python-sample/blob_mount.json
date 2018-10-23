@@ -1,14 +1,8 @@
 [
     {
-        "accountName":"enter_your_accountname",
-        "accountKey":"enter_your_accountkey",
-        "containerName":"enter_your_container_name",
-        "mappedDirectory":"/mnt/enter_your_local_directory"
-    },
-    {
-        "accountName":"enter_your_accountname_2",
-        "accountKey":"enter_your_accountkey_2",
-        "containerName":"enter_your_container_name_2",
-        "mappedDirectory":"/mnt/enter_your_local_directory_2"
+        "accountName":"your_azure_storage_account_name",
+        "accountKey":"your_azure_storage_account_key",
+        "containerName":"input",
+        "mappedDirectory":"/mnt/input"
     }
 ]
