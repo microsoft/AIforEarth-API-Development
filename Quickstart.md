@@ -242,7 +242,7 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The service_settings.env file contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
+The Dockerfile contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
 ```Dockerfile
 # Logging Variables ----------------------------------------------------
 # All logging and metric collection flows through Application Insights
@@ -283,7 +283,7 @@ Click "Create" on the validation screen that appears. Once the storage account i
 
 ![Create Storage Account](Examples/screenshots/blob4.PNG)
 
-Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob. 
+Use a text editor to create a file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob. 
 
 ![Upload config.csv](Examples/screenshots/blob_upload.PNG)
 
