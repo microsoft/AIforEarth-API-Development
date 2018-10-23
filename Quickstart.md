@@ -269,9 +269,9 @@ docker build . -t your_registry_name.azurecr.io/your_custom_image_name:1
 ### Run your image, locally
 Run a container based on your image:
 ```Bash
-docker run --env-file=service_settings.env -p 8081:80 "your_custom_image_name:1"
+docker run -p 8081:80 "your_custom_image_name:1"
 ```
-In the above command, --env-file lets you pass in an environment variable file, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
+In the above command, the -p switch designates the local port mapping to the container port. -p host_port:container_port.  The host_port is arbitrary and will be the port to which you issue requests.  Ensure, however, that the container_port is exposed in the Dockerfile with the Dockerfile entry:
 ```Dockerfile
 EXPOSE 80
 ```

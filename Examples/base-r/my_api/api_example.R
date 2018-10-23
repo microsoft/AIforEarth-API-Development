@@ -9,7 +9,7 @@ source_python("/ai4e_api_tools/sas_blob.py")
 source("/ai4e_api_tools/task_management/api_task.R")
 source("/ai4e_api_tools/ai4e_app_insights.R")
 
-request_being_processed <- FALSE
+write.table(paste0(FALSE), file = "running.txt")
 
 # Helper function to write dataframes to csv
 WriteBlob <- function(dataframe_to_write, container_uri, blob_name, include_row_names) {
@@ -31,27 +31,30 @@ GetBlobFromContainer<-function(container_uri, blob_name){
 
 # Primary working function
 ProcessData<-function(taskId, config){
-  tryCatch({
+  #tryCatch({
     # Update task status at any time
+    print("a1")
     UpdateTaskStatus(taskId, 'running')
 
     #INSERT_YOUR_MODEL_CALL_HERE
 
     container_uri <- config$container_uri
-
+    print("b2")
     run_id <- config$run_id
-    observations_csv <- GetBlobFromContainer(container_uri, paste(run_id, "Observation.csv", sep= "/"))
+    observations_csv <- GetBlobFromContainer(container_uri, paste(run_id, "PatrolObservation_orig.csv", sep= "/"))
+    print("c3")
     observations <- read.csv(observations_csv)
-
+    print("d4")
     dir = WriteBlob(observations, container_uri, paste(run_id, "output_dir/output_name.csv", sep= "/"), include_row_names=FALSE)
-
+    print("e5")
+    write.table(paste0(FALSE), file = "running.txt")
     UpdateTaskStatus(taskId, 'completed')
-  }, error = function(err) {
-    log_debug("Setting request_being_processed to FALSE.", taskId)
-    request_being_processed <<- FALSE
-    log_exception(paste0(err), taskId)
-    UpdateTaskStatus(taskId, paste("failed - ", err))
-  })
+  #}, error = function(err) {
+   # print(paste0(err))
+   # write.table(paste0(FALSE), file = "running.txt")
+   # log_exception(paste0(err), taskId)
+   # UpdateTaskStatus(taskId, paste("failed - ", err))
+  #})
 }
 
 #* Test process
@@ -62,35 +65,41 @@ function(req){
   task <- AddTask(req)
   taskId <- task$uuid
   sas_blob_helper = SasBlob()
-
+  print("a")
+  is_processing <- read.table("running.txt")
+  print("b")
+  print(is_processing)
   # R is single-threaded, so we only process one response at a time.
   # Parallel requests are handled by AKS auto-scaling.
-  if (request_being_processed == TRUE)
+  if (is_processing == "TRUE")
   {
+    print("c")
     log_warn("Too many requests are being processed.", taskId)
     res$status <- 429 # Too manay requests
     res$body <- "Too many requests are being processed. Retry with a backoff."
     return(res)
   }
 
-  request_being_processed <<- TRUE
-
-  tryCatch({
-  body <- req$postBody
+  print("d")
+  write.table(paste0(TRUE), file = "running.txt")
+  print("e")
+  #tryCatch({
+    body <- req$postBody
     input_data <- fromJSON(body, simplifyDataFrame=TRUE)
-
-    promise <- future(ProcessData(taskId, input_data))
+    print("f")
+    #promise <- future(ProcessData(taskId, input_data))
+    ProcessData(taskId, input_data)
     message <- paste0("Starting task: ", taskId, " Output files will be placed in ", input_data$run_id, " directory.")
     directory <- input_data$run_id
-  }, error = function(err) {
-    log_debug("Setting request_being_processed to FALSE.", taskId)
-    request_being_processed <<- FALSE
-    log_exception(paste0(err), taskId)
-    UpdateTaskStatus(taskId, paste("failed - ", err))
-    res$status <- 400
-    res$body <- "Bad request. Please ensure JSON request body is properly formatted."
-    return(res)
-  })
+  #}, error = function(err) {
+  #  print(paste0(err))
+  #  write.table(paste0(FALSE), file = "running.txt")
+  #  log_exception(paste0(err), taskId)
+  #  UpdateTaskStatus(taskId, paste("failed - ", err))
+  #  res$status <- 400
+  #  res$body <- "Bad request. Please ensure JSON request body is properly formatted."
+  #  return(res)
+  #})
 
   data.frame(message, taskId, directory)
 }
