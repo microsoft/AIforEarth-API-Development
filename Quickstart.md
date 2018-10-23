@@ -6,7 +6,7 @@ We are assuming that you have a trained model that you want to expose as an API.
 ## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
 
-From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. 
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu.
 
 ![Create a Resource](Examples/screenshots/resource_group1.PNG)
 
@@ -33,7 +33,7 @@ Select the Resource group option and click Create. Use a descriptive Resource gr
   12. [FAQs](#FAQs)
 
 
-## Machine Setup 
+## Machine Setup
 You will need an active Azure subscription as well as the following software installed.
 + [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 + [Docker Desktop](https://www.docker.com/products/docker-desktop)
@@ -53,7 +53,7 @@ AI for Earth APIs are all built from an AI for Earth base image.  The [Repo Layo
 - Basic Python API (Sync and Async)
 - Basic R API (Sync and Async)
 - Blob Python API
-- Synchronous Custom Vision API (Python) 
+- Synchronous Custom Vision API (Python)
 - Synchronous PyTorch API
 
 In general, if you're using Python, you will want to use an image or example with the base-py or blob-py images.  If you are using R, you will want to use an image or example with the base-r or blob-r images.  The difference between them: the blob-* image contains everything that the cooresponding base-* image contains, plus additional support for mounting [Azure blob storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).  This may be useful if you need to process (for example) a batch of images all at once; you can upload them all to Azure blob storage, the container in which your model is running can mount that storage, and access it like it is local storage.  
@@ -158,7 +158,7 @@ ProcessDataAPI<-function(req, res){
   post_body <- req$postBody
   input_data <- fromJSON(post_body, simplifyDataFrame=TRUE)
 
-  # Return JSON containing run_id and container_uri 
+  # Return JSON containing run_id and container_uri
   data.frame(input_data$run_id, input_data$container_uri)
 }
 ```
@@ -184,24 +184,24 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application. 
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application.
 
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
-The instrumentation key is for general logging and tracing.  This is found under the "Properties" section for your Application Insights instance in the Azure portal. 
+The instrumentation key is for general logging and tracing.  This is found under the "Properties" section for your Application Insights instance in the Azure portal.
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
 
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
 
-To generate these, first create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) by clicking "Create a resource" from the left menu and searching for Application Insights. 
+To generate these, first create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) by clicking "Create a resource" from the left menu and searching for Application Insights.
 
 ![Search for App Insights](Examples/screenshots/app_insights1.PNG)
 
-Click Create, then choose a name for your Application Insight resource. For Application Type, choose General from the drop-down menu. For Resource Group, select "Use existing" and choose the resource group that you created earlier. 
+Click Create, then choose a name for your Application Insight resource. For Application Type, choose General from the drop-down menu. For Resource Group, select "Use existing" and choose the resource group that you created earlier.
 
 ![Create App Insights](Examples/screenshots/app_insights2.PNG)
 
-Once your AppInsights resource has successfully deployed, navigate to the resource from your home screen, and locate the Instrumentation Key. 
+Once your AppInsights resource has successfully deployed, navigate to the resource from your home screen, and locate the Instrumentation Key.
 
 ![Get Instrumentation Key](Examples/screenshots/app_insights3.PNG)
 
@@ -312,7 +312,7 @@ If you find that there are errors and you need to go back and rebuild your docke
 docker ps
 
 # Find the container ID in the list from the previous command, and replace <container-id> with that value to end the process
-docker kill <container-id> 
+docker kill <container-id>
 ```
 Then you can execute your docker build and docker run commands again.  Additionally, the docker logs are located in your user account's AppData\Local\Docker folder (i.e. C:\Users\jennmar\AppData\Local\Docker).  
 
@@ -324,7 +324,7 @@ Now that you have a local instance of your container running, you should issue r
 1. Open Postman or your favorite API development tool.
 2. From your service code, determine which endpoint you want to test.  If you are following one of our examples, the endpoint is: `http://localhost:<host_port>/<my_api_prefix>/<route>`.  Also, understand if you will issuing a POST or a GET.
 3. In your API dev tool, select POST or GET and enter the endpoint you would like to test.
-4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request. Alternatively, if you are POSTing an image, upload it to Postman (see screenshots below). 
+4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request. Alternatively, if you are POSTing an image, upload it to Postman (see screenshots below).
 5. Click "Send" or execute the call to your endpoint.  The running container shell will contain any messages that are printed to the console.
 
 #### Posting JSON
@@ -333,24 +333,44 @@ From the Body tab, select "raw". Ensure that "JSON (application/json)" is select
 ![Post JSON](Examples/screenshots/postman_json.PNG)
 
 #### Posting an Image
-From the Body tab, select "binary". Upload your JPEG or PNG image here. 
+From the Body tab, select "binary". Upload your JPEG or PNG image here.
 
 ![Post Image](Examples/screenshots/postman_image.PNG)
 
 ## Publish to Azure Container Registry
-If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
+If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  
+1. Log into the Azure Portal and click on +Create a Resource. Click on "Containers" and select "Container Registry". Select a name for your registry and make sure you choose the same subscription
+and resource group you used for the AppInsight step above. Before creating the registry make sure
+Admin user is set to "enable".
+![Create container registry](Examples/screenshots/create_ACR-1.png)
 
-1. Log into your ACR:
+2. After your Azure Container Registry is created, you can click on it to find your login server.
+
+![ACR Login Server](Examples/screenshots/create_ACR-2.png)
+
+Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
+
+3. Tag your docker image:
+```Bash
+docker tag <your_login_server>/your_custom_image_name:tag
+```
+4. Log into your ACR:
 ```Bash
 docker login --username <username> --password <password> <login server>
 ```
-2. Push your image to your ACR:
+You can find your admin ACR credentials on Azure portal.
+
+![ACR Credentials](Examples/screenshots/create_ACR-3.png)
+
+5. Push your image to your ACR:
 ```Bash
-docker push your_registry_name.azurecr.io/your_custom_image_name:tag
+docker push <your_login_server>/your_custom_image_name:tag
 ```
 
 ## Run your container in Azure Container Instances
 Running your container in ACI is easy.  The easiest way is to open the Azure Portal to your ACR, select the repository and tag that corresponds to the image you just pushed, click on it and select "Run Instance."  This will create a new ACI instance of your image.
+
+![Running Azure Container Instance](Examples/screenshots/run_ACI-1.png)
 
 ### Issue requests to your hosted API
 Now that your service is running within ACI, we can issue requests to it.
@@ -386,4 +406,3 @@ Upon completion of this quickstart tutorial, you may want to investigate the fol
 "my_api_prefix" is a variable that denotes the prefix for all of your API endpoints.  Typically, you would create a versioned path, so that you can easily make breaking changes in the future without harming existing users.  A good prefix example would be: /v1/my_api/.
 - In the Python example, why is there an "AppInsights" and an "AI4EAppInsights" library?
 The Application Insights Python SDK is not an officially supported SDK, but it does provide great Flask integration.  Because of this, in our examples, we use the SDK's Flask integration, but we also provide a hardended (AI4EAppInsights) library that you should use for logging.
-
