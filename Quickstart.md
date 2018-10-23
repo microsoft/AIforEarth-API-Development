@@ -272,7 +272,32 @@ API_PREFIX=/v1/my_api/tasker
 You may modify other environment variables as well.  In particular, you may want to change the environment variable API_PREFIX.  We recommend using the format "/\<version-number>/\<api-name>/\<function>" such as "/v1/my_api/tasker".  
 
 ## (Optional) Set up Azure blob storage
-If you are using the blob-mount-py example or either of the base images with blob storage integration, you must also modify the **blob_mount.json** file to provide your Azure blob storage account settings.  
+You will want to follow these steps if you are working from the **blob-mount-py** example. If you do not plan to use Azure blob storage in your app, skip ahead to **Build and run your image**
+First you will need create a new Azure Blob Container with a file named `config.csv`. We also recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/) to aid in storage upload/download.
+
+Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create". 
+
+![Create Storage Account](Examples/screenshots/blob1.PNG)
+
+Click "Create" on the validation screen that appears. Once the storage account is deployed, click "Go to resource". You still need to create a container within your storage account. To do this, scroll down on the left menu of your storage account to click on "Blobs". Click the plus sign in the top left to create a new container. 
+
+![Create Storage Account](Examples/screenshots/blob4.PNG)
+
+Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob. 
+
+![Upload config.csv](Examples/screenshots/blob_upload.PNG)
+
+Next, from within the Azure Portal or within Azure Storage Explorer, copy your blob's storage key. You can find your storage keys by clicking "Keys" on the left menu of your storage account. 
+
+![Create Storage Account](Examples/screenshots/blob_key.PNG)
+
+You must also modify the [blob_mount.json](./blob_mount.json) file as follows:
+- accountName: This is the name of your blob storage account.
+- accountKey: This is storage account key that you copied.
+- containerName: This is the name of the container that you created within your storage account. It is the container that will be mapped, locally.
+- mappedDirectory: This is the local path where your container will be mounted.
+
+Note: You may map as many containers as you would like in this file. The blob mounter will mount all of them.
 
 
 ## Build and run your image
