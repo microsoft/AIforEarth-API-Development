@@ -184,9 +184,7 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  
-
-Create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) and get your instrumentation key by following the instructions in the [below link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource) (you can stop after the "Copy the instrumentation key" step).  Then, follow the instructions from the [second link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements) to create a live stream key as well.  Store both of these keys in a safe place.   
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application. 
 
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
@@ -194,6 +192,24 @@ The instrumentation key is for general logging and tracing.  This is found under
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
 
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
+
+To generate these, first create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) by clicking "Create a resource" from the left menu and searching for Application Insights. 
+
+![Search for App Insights](Examples/screenshots/app_insights1.PNG)
+
+Click Create, then choose a name for your Application Insight resource. For Application Type, choose General from the drop-down menu. For Resource Group, select "Use existing" and choose the resource group that you created earlier. 
+
+![Create App Insights](Examples/screenshots/app_insights2.PNG)
+
+Once your AppInsights resource has successfully deployed, navigate to the resource from your home screen, and locate the Instrumentation Key. 
+
+![Get Instrumentation Key](Examples/screenshots/app_insights3.PNG)
+
+Next, create a live stream key as well.  
+**Still unable to create a live stream key!**
+
+Copy and store both of these keys in a safe place.   
+
 
 ### Edit LocalForwarder.config
 If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys (be sure to add the proper key in the right place as shown below - you will use your instrumentation key twice and your live metrics key once):
