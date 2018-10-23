@@ -6,7 +6,7 @@ We are assuming that you have a trained model that you want to expose as an API.
 ## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
 
-From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. Search the Marketplace for "Resource Group", select the resource group option and click Create. 
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. Search the Marketplace for "Resource Group", select the resource group option and click Create.
 
 ![Search for Resource Group](Examples/screenshots/resource_group.PNG)
 
@@ -275,19 +275,19 @@ You may modify other environment variables as well.  In particular, you may want
 You will want to follow these steps if you are working from the **blob-mount-py** example. If you do not plan to use Azure blob storage in your app, skip ahead to **Build and run your image**
 First you will need create a new Azure Blob Container with a file named `config.csv`. We also recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/) to aid in storage upload/download.
 
-Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create". 
+Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create".
 
 ![Create Storage Account](Examples/screenshots/blob1.PNG)
 
-Click "Create" on the validation screen that appears. Once the storage account is deployed, click "Go to resource". You still need to create a container within your storage account. To do this, scroll down on the left menu of your storage account to click on "Blobs". Click the plus sign in the top left to create a new container. 
+Click "Create" on the validation screen that appears. Once the storage account is deployed, click "Go to resource". You still need to create a container within your storage account. To do this, scroll down on the left menu of your storage account to click on "Blobs". Click the plus sign in the top left to create a new container.
 
 ![Create Storage Account](Examples/screenshots/blob4.PNG)
 
-Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob. 
+Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob.
 
 ![Upload config.csv](Examples/screenshots/blob_upload.PNG)
 
-Next, from within the Azure Portal or within Azure Storage Explorer, copy your blob's storage key. You can find your storage keys by clicking "Keys" on the left menu of your storage account. 
+Next, from within the Azure Portal or within Azure Storage Explorer, copy your blob's storage key. You can find your storage keys by clicking "Keys" on the left menu of your storage account.
 
 ![Create Storage Account](Examples/screenshots/blob_key.PNG)
 
@@ -354,9 +354,11 @@ From the Body tab, select "raw". Ensure that "JSON (application/json)" is select
 ![Post JSON](Examples/screenshots/postman_json.PNG)
 
 #### Posting an Image
-From the Body tab, select "binary". Upload your JPEG or PNG image here.
+In the Headers tab, create a Content-Type header of either image/jpeg or image/png. From the Body tab, select "binary". Upload your JPEG or PNG image here.
 
-![Post Image](Examples/screenshots/postman_image.PNG)
+![Post Image](Examples/screenshots/postman_pytorch1.PNG)
+
+![Post Image](Examples/screenshots/postman_pytorch2.PNG)
 
 ## Publish to Azure Container Registry
 If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  
