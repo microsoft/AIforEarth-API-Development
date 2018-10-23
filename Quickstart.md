@@ -324,8 +324,18 @@ Now that you have a local instance of your container running, you should issue r
 1. Open Postman or your favorite API development tool.
 2. From your service code, determine which endpoint you want to test.  If you are following one of our examples, the endpoint is: `http://localhost:<host_port>/<my_api_prefix>/<route>`.  Also, understand if you will issuing a POST or a GET.
 3. In your API dev tool, select POST or GET and enter the endpoint you would like to test.
-4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request.
+4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request. Alternatively, if you are POSTing an image, upload it to Postman (see screenshots below). 
 5. Click "Send" or execute the call to your endpoint.  The running container shell will contain any messages that are printed to the console.
+
+#### Posting JSON
+From the Body tab, select "raw". Ensure that "JSON (application/json)" is selected from the drop-down option (note that a Content-type header is automatically added when you do this). Construct valid JSON in the window.
+
+![Post JSON](Examples/screenshots/postman_json.PNG)
+
+#### Posting an Image
+From the Body tab, select "binary". Upload your JPEG or PNG image here. 
+
+![Post Image](Examples/screenshots/postman_image.PNG)
 
 ## Publish to Azure Container Registry
 If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
