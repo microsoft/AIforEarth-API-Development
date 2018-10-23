@@ -7,7 +7,6 @@ RUN apt-get --assume-yes install gfortran
 RUN R -e 'install.packages("raster"); library(raster)'  
 RUN R -e 'install.packages("maptools"); library(maptools)'
 RUN R -e 'install.packages("ade4"); library(ade4)'
-RUN R -e 'install.packages("rgeos"); library(rgeos)'
 RUN R -e 'install.packages("adehabitatMA"); library(adehabitatMA)'
 RUN R -e 'install.packages("adehabitatLT"); library(adehabitatLT)'
 RUN R -e 'install.packages("trip"); library(trip)'
@@ -29,19 +28,15 @@ RUN chmod +x /startup.sh
 
 # Application Insights keys and trace configuration
 ENV APPINSIGHTS_INSTRUMENTATIONKEY= \
-    APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY= \
-    LOCALAPPDATA=/app_insights_data \
-    OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
+    APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY=
 
 # The following variables will allow you to filter logs in AppInsights
 ENV SERVICE_OWNER=AI4E_Test \
     SERVICE_CLUSTER=Local\ Docker \
-    SERVICE_MODEL_NAME=base-py\ example \
-    SERVICE_MODEL_FRAMEWORK=Python \
-    SERVICE_MODEL_FRAMEOWRK_VERSION=3.6.6 \
+    SERVICE_MODEL_NAME=base-R\ example \
+    SERVICE_MODEL_FRAMEWORK=R \
+    SERVICE_MODEL_FRAMEOWRK_VERSION=microsoft-r-open-3.5.1 \
     SERVICE_MODEL_VERSION=1.0
-
-ENV API_PREFIX=/v1/my_api/tasker
 
 # Expose the port that is to be used when calling your API
 EXPOSE 80
