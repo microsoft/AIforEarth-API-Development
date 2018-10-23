@@ -3,7 +3,20 @@ This quickstart will walk you through turning a model into an API.  Starting wit
 
 We are assuming that you have a trained model that you want to expose as an API.  To begin, download or clone this repository to your local machine.  
 
+## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
+
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. 
+
+![Create a Resource](Examples/screenshots/resource_group1.PNG)
+
+Search the Marketplace for "Resource Group".
+
+![Search for Resource Group](Examples/screenshots/resource_group2.PNG)
+
+Select the Resource group option and click Create. Use a descriptive Resource group name, such as "ai4earth-hackathon". For Resource group location, choose West US 2. Then click Create.
+
+![Resource Group](Examples/screenshots/resource_group4.PNG)
 
 ## Contents
   1. [Choose a base image or example](#Choose-a-base-image-or-example)
@@ -171,9 +184,7 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  
-
-Create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) and get your instrumentation key by following the instructions in the [below link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource) (you can stop after the "Copy the instrumentation key" step).  Then, follow the instructions from the [second link](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements) to create a live stream key as well.  Store both of these keys in a safe place.   
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application. 
 
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
@@ -181,6 +192,24 @@ The instrumentation key is for general logging and tracing.  This is found under
 - [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
 
 The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
+
+To generate these, first create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) by clicking "Create a resource" from the left menu and searching for Application Insights. 
+
+![Search for App Insights](Examples/screenshots/app_insights1.PNG)
+
+Click Create, then choose a name for your Application Insight resource. For Application Type, choose General from the drop-down menu. For Resource Group, select "Use existing" and choose the resource group that you created earlier. 
+
+![Create App Insights](Examples/screenshots/app_insights2.PNG)
+
+Once your AppInsights resource has successfully deployed, navigate to the resource from your home screen, and locate the Instrumentation Key. 
+
+![Get Instrumentation Key](Examples/screenshots/app_insights3.PNG)
+
+Next, create a live stream key as well.  
+**Still unable to create a live stream key!**
+
+Copy and store both of these keys in a safe place.   
+
 
 ### Edit LocalForwarder.config
 If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys (be sure to add the proper key in the right place as shown below - you will use your instrumentation key twice and your live metrics key once):
@@ -295,8 +324,18 @@ Now that you have a local instance of your container running, you should issue r
 1. Open Postman or your favorite API development tool.
 2. From your service code, determine which endpoint you want to test.  If you are following one of our examples, the endpoint is: `http://localhost:<host_port>/<my_api_prefix>/<route>`.  Also, understand if you will issuing a POST or a GET.
 3. In your API dev tool, select POST or GET and enter the endpoint you would like to test.
-4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request.
+4. If you are performing a POST, construct valid JSON for your endpoint and enter it into the body of the request. Alternatively, if you are POSTing an image, upload it to Postman (see screenshots below). 
 5. Click "Send" or execute the call to your endpoint.  The running container shell will contain any messages that are printed to the console.
+
+#### Posting JSON
+From the Body tab, select "raw". Ensure that "JSON (application/json)" is selected from the drop-down option (note that a Content-type header is automatically added when you do this). Construct valid JSON in the window.
+
+![Post JSON](Examples/screenshots/postman_json.PNG)
+
+#### Posting an Image
+From the Body tab, select "binary". Upload your JPEG or PNG image here. 
+
+![Post Image](Examples/screenshots/postman_image.PNG)
 
 ## Publish to Azure Container Registry
 If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
