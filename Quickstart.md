@@ -371,15 +371,15 @@ Admin user is set to "enable".
 
 ![ACR Login Server](Examples/screenshots/create_ACR-2.png)
 
-Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
+Note: if you just created an ACR (i.e., did not include an ACR uri in your previous build), you will need to tag your container image with your ACR uri.
 
 3. Tag your docker image:
 ```Bash
-docker tag <your_login_server>/your_custom_image_name:tag
+docker tag your_custom_image_name:tag <your_login_server>/your_custom_image_name:tag
 ```
 4. Log into your ACR:
 ```Bash
-docker login --username <username> --password <password> <login server>
+docker login --username <username> --password <password> <your_login_server>
 ```
 You can find your admin ACR credentials on Azure portal.
 
