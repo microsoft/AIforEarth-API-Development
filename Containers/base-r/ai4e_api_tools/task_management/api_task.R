@@ -11,11 +11,13 @@ AddTask<-function(req){
   )
 
   if (file.exists("tasks.csv")) {
+    print("file exists")
     tasks<-read.csv("tasks.csv", stringsAsFactors=FALSE)
 
     lastId <- tail(tasks, 1)[,1]
     taskId = lastId + 1
-
+    newTask$uuid <- taskId
+    
     print(newTask)
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
