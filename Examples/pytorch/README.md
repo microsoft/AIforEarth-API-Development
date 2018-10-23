@@ -31,7 +31,7 @@ docker build . -t pytorch_example:1
 
 Run image locally:
 ```
-docker run --env-file=service_settings.env -p 8081:80 "pytorch_example:1"
+docker run -p 8081:80 "pytorch_example:1"
 ```
 
 Run an instance of this image interactively and start bash to debug:

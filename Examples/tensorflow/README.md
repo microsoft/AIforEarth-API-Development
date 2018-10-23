@@ -34,10 +34,10 @@ docker build . -t tensorflow_example:1
 
 Run image locally:
 ```
-docker run --env-file=service_settings.env -p 8081:80 "tensorflow_example:1"
+docker run -p 8081:80 "tensorflow_example:1"
 ```
 
-The argument `env-file` specifies the file that contains the necessary environment variables to be set inside the container when it starts. For this async API example, we saved the resulting imgae from the long running process to  blob storage. You need to create a storage account with Blob Storage, and assign the storage account name and the key (secondary) to `STORAGE_ACCOUNT_NAME` and `STORAGE_ACCOUNT_KEY` on the last two lines of `service_settings.env` in the current directory.
+For this async API example, we saved the resulting imgae from the long running process to  blob storage. You need to create a storage account with Blob Storage, and assign the storage account name and the key (secondary) to `STORAGE_ACCOUNT_NAME` and `STORAGE_ACCOUNT_KEY` inside the Dockerfile.
 
 Run an instance of this image interactively and start bash to debug:
 ```
