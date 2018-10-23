@@ -6,17 +6,13 @@ We are assuming that you have a trained model that you want to expose as an API.
 ## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
 
-From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu.
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. Search the Marketplace for "Resource Group", select the resource group option and click Create. 
 
-![Create a Resource](Examples/screenshots/resource_group1.PNG)
+![Search for Resource Group](Examples/screenshots/resource_group.PNG)
 
-Search the Marketplace for "Resource Group".
+Use a descriptive resource group name, such as "ai4e_yourname_app_group". For resource group location, choose West US 2. Then click Create.
 
-![Search for Resource Group](Examples/screenshots/resource_group2.PNG)
-
-Select the Resource group option and click Create. Use a descriptive Resource group name, such as "ai4earth-hackathon". For Resource group location, choose West US 2. Then click Create.
-
-![Resource Group](Examples/screenshots/resource_group4.PNG)
+![Resource Group](Examples/screenshots/resource_group_3.PNG)
 
 ## Contents
   1. [Choose a base image or example](#Choose-a-base-image-or-example)
