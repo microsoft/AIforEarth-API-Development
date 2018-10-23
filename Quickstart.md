@@ -354,9 +354,11 @@ From the Body tab, select "raw". Ensure that "JSON (application/json)" is select
 ![Post JSON](Examples/screenshots/postman_json.PNG)
 
 #### Posting an Image
-From the Body tab, select "binary". Upload your JPEG or PNG image here.
+In the Headers tab, create a Content-Type header of either image/jpeg or image/png. From the Body tab, select "binary". Upload your JPEG or PNG image here.
 
-![Post Image](Examples/screenshots/postman_image.PNG)
+![Post Image](Examples/screenshots/postman_pytorch1.PNG)
+
+![Post Image](Examples/screenshots/postman_pytorch2.PNG)
 
 ## Publish to Azure Container Registry
 If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  
@@ -369,15 +371,15 @@ Admin user is set to "enable".
 
 ![ACR Login Server](Examples/screenshots/create_ACR-2.png)
 
-Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
+Note: if you just created an ACR (i.e., did not include an ACR uri in your previous build), you will need to tag your container image with your ACR uri.
 
 3. Tag your docker image:
 ```Bash
-docker tag <your_login_server>/your_custom_image_name:tag
+docker tag your_custom_image_name:tag <your_login_server>/your_custom_image_name:tag
 ```
 4. Log into your ACR:
 ```Bash
-docker login --username <username> --password <password> <login server>
+docker login --username <username> --password <password> <your_login_server>
 ```
 You can find your admin ACR credentials on Azure portal.
 
