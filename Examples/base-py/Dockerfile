@@ -31,6 +31,3 @@ EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
 ENTRYPOINT [ "/startup.sh" ]
-
-
-ENV TMPDIR="/tmp" APPDIR="/app"
