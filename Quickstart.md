@@ -3,7 +3,20 @@ This quickstart will walk you through turning a model into an API.  Starting wit
 
 We are assuming that you have a trained model that you want to expose as an API.  To begin, download or clone this repository to your local machine.  
 
+## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
+
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. 
+
+![Create a Resource](Examples/screenshots/resource_group1.PNG)
+
+Search the Marketplace for "Resource Group".
+
+![Search for Resource Group](Examples/screenshots/resource_group2.PNG)
+
+Select the Resource group option and click Create. Use a descriptive Resource group name, such as "ai4earth-hackathon". For Resource group location, choose West US 2. Then click Create.
+
+![Resource Group](Examples/screenshots/resource_group4.PNG)
 
 ## Contents
   1. [Choose a base image or example](#Choose-a-base-image-or-example)
