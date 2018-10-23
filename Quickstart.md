@@ -242,7 +242,7 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The service_settings.env file contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
+The Dockerfile contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
 ```Dockerfile
 # Logging Variables ----------------------------------------------------
 # All logging and metric collection flows through Application Insights
