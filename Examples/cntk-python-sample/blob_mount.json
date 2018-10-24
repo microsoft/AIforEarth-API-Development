@@ -1,8 +1,0 @@
-[
-    {
-        "accountName":"your_azure_storage_account_name",
-        "accountKey":"your_azure_storage_account_key",
-        "containerName":"input",
-        "mappedDirectory":"/mnt/input"
-    }
-]
