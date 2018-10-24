@@ -19,7 +19,7 @@ Use a descriptive resource group name, such as "ai4e_yourname_app_group". For re
   2. [Insert code to call your model](#Insert-code-to-call-your-model)
   3. [Input handling](#Input-handling)
   4. [Output handling](#Output-handling)
-  5. [Create AppInsights instrumentation keys (optional)](#Create-AppInsights-instrumentation-keys)
+  5. [Create AppInsights instrumentation keys](#Create-AppInsights-instrumentation-keys)
   6. [Install required packages](#Install-required-packages)
   7. [Set environment variables](#Set-environment-variables)
   8. [Build and run your image](#Build-and-run-your-image)
@@ -54,8 +54,46 @@ AI for Earth APIs are all built from an AI for Earth base image.  The [Repo Layo
 
 In general, if you're using Python, you will want to use an image or example with the base-py or blob-py images.  If you are using R, you will want to use an image or example with the base-r or blob-r images.  The difference between them: the blob-* image contains everything that the cooresponding base-* image contains, plus additional support for mounting [Azure blob storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).  This may be useful if you need to process (for example) a batch of images all at once; you can upload them all to Azure blob storage, the container in which your model is running can mount that storage, and access it like it is local storage.  
 
+## Asynchronous (async) vs. Synchronous (sync) Endpoint
 In addition to your language choice, you should think about whether your API call should be synchronous or asynchronous.  A synchronous API call will invoke your model, get results, and return immediately.  This is a good paradigm to use if you want to perform classification with your model on a single image, for example.  An asynchronous API call should be used for long-running tasks, like processing a whole folder of images, performing object detection on each image with your model, and storing the results.  
+ 
+### Asynchronous Implementation Examples
+The following examples demonstrate async endpoints:
+- [base-py](./examples/base-py/my_api/runserver.py)'s / endpoint
+- [base-r](./examples/base-r/my_api/api_example.R)
+- [tensorflow](./examples/tensorflow/tf_iNat_api/runserver.py)
+ 
+### Synchronous Implementation Examples
+The following examples demonstrate sync endpoints:
+- [base-py](./examples/base-py/my_api/runserver.py)'s echo endpoint
+- [customvision-sample](./examples/customvision-sample/custom_vision_api/runserver.py)
+- [pytorch](./examples/pytorch/pytorch_api/runserver.py)
 
+## Input/Output Patterns
+While input patterns can be used for sync or async designs, your output design is dependent on your sync/async choice, therefore, we have identified recommended approaches for each.
+
+### Input Recommendations
+#### JSON
+[JSON](https://json.org/) is the recommended approach for data ingestion.
+
+#### Binary Input
+Many applications of AI apply models to image/binary inputs. Here are some approaches:
+- Send the image directly via request data. See the [tensorflow](./examples/tensorflow/tf_iNat_api/runserver.py) example to see how it is accomplished.
+- Upload your binary input to an Azure Blob, create a [SAS key](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1), and add a JSON field for it.
+- If you would like users to use your own Azure blob storage, we provide tools to [mount blobs as local drives](https://github.com/Azure/azure-storage-fuse) within your service. You may then use this virtual file system, locally.
+- Serializing your payload is a very efficient method for transmission. [BSON](http://bsonspec.org/) is an open standard, bin­ary-en­coded serialization for such purposes.
+
+### Asynchronous Pattern
+The preferred way of handling asynchronous API calls is to provide a task status endpoint to your users. When a request is submitted, a new taskId is immediately returned to the caller to track the status of their request as it is processed.
+
+We have several tools to help with task tracking that you can use for local development and testing. These tools create a database within the service instance and are not recommended for production use.
+
+Once a task is completed, the user needs to retrieve the result of their service call. This can be accomplished in several ways:
+- Return a SAS-keyed URL to an Azure Blob Container via a call to the task endpoint.
+- Request that a writable SAS-keyed URL is provided as input to your API call. Indicate completion via the task interface and write the output to that URL.
+- If you would like users to use your own Azure blob storage, you can write directly to a virtually-mounted drive.
+
+### Examples
 We have provided several examples that leverage these base images to make it easier for you to get started.  
 - **base-py:** Start with this example if you are using Python and don't need Azure blob storage integration, and none of the below more specific examples are a good fit.  It contains both synchronous and asynchronous endpoints.  It is a great example to use for asynchronous, long-running API calls.  
 - **base-r:** Start with this example if you are using R.  
@@ -245,37 +283,29 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The Dockerfile contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
+The Dockerfile also contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
 ```Dockerfile
-# Logging Variables ----------------------------------------------------
-# All logging and metric collection flows through Application Insights
-# Set the following env var to your AppInsights instrumentation key.
-APPINSIGHTS_INSTRUMENTATIONKEY=
-# Optional live metrics stream key
-# https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements
-APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY=
-# Location where AppInsights stores its data
-LOCALAPPDATA=/app_insights_data
-# Internal address of the OpenCensus tracer (for sending traces to AppInsights)
-OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
-# The following variables will allow you to filter logs in AppInsights
-SERVICE_OWNER=AI4E_Test
-SERVICE_CLUSTER=Local Docker
-SERVICE_MODEL_NAME=base-py example
-SERVICE_MODEL_FRAMEWORK=Python
-SERVICE_MODEL_FRAMEOWRK_VERSION=3.6.6
-SERVICE_MODEL_VERSION=1.0
-# End Logging Variables ------------------------------------------------
+# Application Insights keys and trace configuration
+ENV APPINSIGHTS_INSTRUMENTATIONKEY=your_instrumentation_key_goes_here \
+    APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY=your_api_key_goes_here \
+    LOCALAPPDATA=/app_insights_data \
+    OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
 
-# Service Variables ----------------------------------------------------
+# The following variables will allow you to filter logs in AppInsights
+ENV SERVICE_OWNER=AI4E_Test \
+    SERVICE_CLUSTER=Local\ Docker \
+    SERVICE_MODEL_NAME=base-py example \
+    SERVICE_MODEL_FRAMEWORK=Python \
+    SERVICE_MODEL_FRAMEOWRK_VERSION=3.6.6 \
+    SERVICE_MODEL_VERSION=1.0
+
 # The API_PREFIX is the URL path that will occur after your domain and before your endpoints
-API_PREFIX=/v1/my_api/tasker
-# End Service Variables ----------------------------------------------------
+ENV API_PREFIX=/v1/my_api/tasker
 ```
 You may modify other environment variables as well.  In particular, you may want to change the environment variable API_PREFIX.  We recommend using the format "/\<version-number>/\<api-name>/\<function>" such as "/v1/my_api/tasker".  
 
 ## (Optional) Set up Azure blob storage
-You will want to follow these steps if you are working from the **blob-mount-py** example. If you do not plan to use Azure blob storage in your app, skip ahead to **Build and run your image**
+You will want to follow these steps if you are working from the **blob-mount-py** example. If you do not plan to use Azure blob storage in your app, skip ahead to **Build and run your image**.  
 First you will need create a new Azure Blob Container with a file named `config.csv`. We also recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/) to aid in storage upload/download.
 
 Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create".
