@@ -6,7 +6,7 @@ We are assuming that you have a trained model that you want to expose as an API.
 ## Create an Azure Resource Group
 Throughout this quickstart tutorial, we recommend that you put all Azure resources created into a single new Resource Group.  This will organize these related resources together and make it easy to remove them as a single group.  
 
-From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. Search the Marketplace for "Resource Group", select the resource group option and click Create. 
+From the [Azure Portal](https://portal.azure.com), click Create a resource from the left menu. Search the Marketplace for "Resource Group", select the resource group option and click Create.
 
 ![Search for Resource Group](Examples/screenshots/resource_group.PNG)
 
@@ -180,7 +180,7 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application.
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and an API key to use in your application.
 
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
@@ -201,8 +201,11 @@ Once your AppInsights resource has successfully deployed, navigate to the resour
 
 ![Get Instrumentation Key](Examples/screenshots/app_insights3.PNG)
 
-Next, create a live stream key as well.  
-**Still unable to create a live stream key!**
+Next, create a Live Metrics API key. Scroll down in the left menu to find API Access within Application Insights, and click Create API key. When creating the key, be sure to select "Authenticate SDK control channel".
+
+![Get API Key](Examples/screenshots/api_key1.PNG)
+
+![Get API Key](Examples/screenshots/api_key2.PNG)
 
 Copy and store both of these keys in a safe place.   
 
@@ -215,7 +218,7 @@ If you are using a Python-based image and would like to take advantage of tracin
   </OpenCensusToApplicationInsights>
   <ApplicationInsights>
     <LiveMetricsStreamInstrumentationKey>your_instrumentation_key_goes_here</LiveMetricsStreamInstrumentationKey>
-    <LiveMetricsStreamAuthenticationApiKey>your_live_metrics_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
+    <LiveMetricsStreamAuthenticationApiKey>your_api_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
     ...
   </ApplicationInsights>
 ```
@@ -242,7 +245,7 @@ RUN apt-get install gfortran -y
 RUN R -e 'install.packages("rgeos"); library(rgeos)'
 ```
 ## Set environment variables
-The service_settings.env file contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
+The Dockerfile contains several environment variables that should be set for proper logging.  You will need to add your two Application Insights keys here as well.  Follow the instructions within the file.  
 ```Dockerfile
 # Logging Variables ----------------------------------------------------
 # All logging and metric collection flows through Application Insights
@@ -275,19 +278,19 @@ You may modify other environment variables as well.  In particular, you may want
 You will want to follow these steps if you are working from the **blob-mount-py** example. If you do not plan to use Azure blob storage in your app, skip ahead to **Build and run your image**
 First you will need create a new Azure Blob Container with a file named `config.csv`. We also recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/) to aid in storage upload/download.
 
-Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create". 
+Create an Azure storage account by selecting "Storage Accounts" from the left menu and clicking the Add button. Make sure to select the resource group you previously created, and use a descriptive name for your storage account (must be lowercase letters or numbers). You may configure advanced options for your account here, or simply click "Review + create".
 
 ![Create Storage Account](Examples/screenshots/blob1.PNG)
 
-Click "Create" on the validation screen that appears. Once the storage account is deployed, click "Go to resource". You still need to create a container within your storage account. To do this, scroll down on the left menu of your storage account to click on "Blobs". Click the plus sign in the top left to create a new container. 
+Click "Create" on the validation screen that appears. Once the storage account is deployed, click "Go to resource". You still need to create a container within your storage account. To do this, scroll down on the left menu of your storage account to click on "Blobs". Click the plus sign in the top left to create a new container.
 
 ![Create Storage Account](Examples/screenshots/blob4.PNG)
 
-Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob. 
+Use a text editor to create an empty file named `config.csv` on your local machine. You can now navigate to your empty Azure container and upload the file as a blob.
 
 ![Upload config.csv](Examples/screenshots/blob_upload.PNG)
 
-Next, from within the Azure Portal or within Azure Storage Explorer, copy your blob's storage key. You can find your storage keys by clicking "Keys" on the left menu of your storage account. 
+Next, from within the Azure Portal or within Azure Storage Explorer, copy your blob's storage key. You can find your storage keys by clicking "Keys" on the left menu of your storage account.
 
 ![Create Storage Account](Examples/screenshots/blob_key.PNG)
 
@@ -354,9 +357,11 @@ From the Body tab, select "raw". Ensure that "JSON (application/json)" is select
 ![Post JSON](Examples/screenshots/postman_json.PNG)
 
 #### Posting an Image
-From the Body tab, select "binary". Upload your JPEG or PNG image here.
+In the Headers tab, create a Content-Type header of either image/jpeg or image/png. From the Body tab, select "binary". Upload your JPEG or PNG image here.
 
-![Post Image](Examples/screenshots/postman_image.PNG)
+![Post Image](Examples/screenshots/postman_pytorch1.PNG)
+
+![Post Image](Examples/screenshots/postman_pytorch2.PNG)
 
 ## Publish to Azure Container Registry
 If you haven't already, [create an instance of Azure Container Registry (ACR)](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) in your subscription.  
@@ -369,15 +374,15 @@ Admin user is set to "enable".
 
 ![ACR Login Server](Examples/screenshots/create_ACR-2.png)
 
-Note: if you just created an ACR, you will need to rebuild your container image with a tag that includes your ACR uri.
+Note: if you just created an ACR (i.e., did not include an ACR uri in your previous build), you will need to tag your container image with your ACR uri.
 
 3. Tag your docker image:
 ```Bash
-docker tag <your_login_server>/your_custom_image_name:tag
+docker tag your_custom_image_name:tag <your_login_server>/your_custom_image_name:tag
 ```
 4. Log into your ACR:
 ```Bash
-docker login --username <username> --password <password> <login server>
+docker login --username <username> --password <password> <your_login_server>
 ```
 You can find your admin ACR credentials on Azure portal.
 
