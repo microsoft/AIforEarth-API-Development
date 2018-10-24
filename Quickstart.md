@@ -180,7 +180,7 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     return send_file(prediction_stream)
 ```
 ## Create AppInsights instrumentation keys
-[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and a Live Stream key to use in your application.
+[Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and an API key to use in your application.
 
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
@@ -201,8 +201,11 @@ Once your AppInsights resource has successfully deployed, navigate to the resour
 
 ![Get Instrumentation Key](Examples/screenshots/app_insights3.PNG)
 
-Next, create a live stream key as well.  
-**Still unable to create a live stream key!**
+Next, create a Live Metrics API key. Scroll down in the left menu to find API Access within Application Insights, and click Create API key. When creating the key, be sure to select "Authenticate SDK control channel".
+
+![Get API Key](Examples/screenshots/api_key1.PNG)
+
+![Get API Key](Examples/screenshots/api_key2.PNG)
 
 Copy and store both of these keys in a safe place.   
 
@@ -215,7 +218,7 @@ If you are using a Python-based image and would like to take advantage of tracin
   </OpenCensusToApplicationInsights>
   <ApplicationInsights>
     <LiveMetricsStreamInstrumentationKey>your_instrumentation_key_goes_here</LiveMetricsStreamInstrumentationKey>
-    <LiveMetricsStreamAuthenticationApiKey>your_live_metrics_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
+    <LiveMetricsStreamAuthenticationApiKey>your_api_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
     ...
   </ApplicationInsights>
 ```
