@@ -59,15 +59,15 @@ In addition to your language choice, you should think about whether your API cal
  
 ### Asynchronous Implementation Examples
 The following examples demonstrate async endpoints:
-- [base-py](./examples/base-py/my_api/runserver.py)'s / endpoint
-- [base-r](./examples/base-r/my_api/api_example.R)
-- [tensorflow](./examples/tensorflow/tf_iNat_api/runserver.py)
+- [base-py](./Examples/base-py/my_api/runserver.py)'s / endpoint
+- [base-r](./Examples/base-r/my_api/api_example.R)
+- [tensorflow](./Examples/tensorflow/tf_iNat_api/runserver.py)
  
 ### Synchronous Implementation Examples
 The following examples demonstrate sync endpoints:
-- [base-py](./examples/base-py/my_api/runserver.py)'s echo endpoint
-- [customvision-sample](./examples/customvision-sample/custom_vision_api/runserver.py)
-- [pytorch](./examples/pytorch/pytorch_api/runserver.py)
+- [base-py](./Examples/base-py/my_api/runserver.py)'s echo endpoint
+- [customvision-sample](./Examples/customvision-sample/custom_vision_api/runserver.py)
+- [pytorch](./Examples/pytorch/pytorch_api/runserver.py)
 
 ## Input/Output Patterns
 While input patterns can be used for sync or async designs, your output design is dependent on your sync/async choice, therefore, we have identified recommended approaches for each.
