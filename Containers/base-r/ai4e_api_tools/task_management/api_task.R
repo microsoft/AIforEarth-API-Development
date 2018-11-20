@@ -18,11 +18,9 @@ AddTask<-function(req){
     taskId = lastId + 1
     newTask$uuid <- taskId
     
-    print(newTask)
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
   else {
-    print(newTask)
     write.csv(newTask, "tasks.csv", row.names=FALSE)
   }
 
@@ -39,7 +37,6 @@ UpdateTaskStatus<-function(taskId, status){
     tasks[taskId, 2] <- c(status)
     tasks[taskId, 3] <- c(format(Sys.time(), "%b %d %X %Y"))
 
-    print(tasks)
     write.csv(tasks, "tasks.csv", row.names=FALSE)
   }
   else {
@@ -50,7 +47,6 @@ UpdateTaskStatus<-function(taskId, status){
       endpoint = "uri"
     )
 
-    print(newTask)
     write.csv(newTask, "tasks.csv", row.names=FALSE)
   }
 }

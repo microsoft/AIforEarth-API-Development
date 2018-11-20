@@ -31,7 +31,7 @@ if (nchar(trim(CONF_KEY_GRANTEE)) == 0) {
 }
 
 log <- function(message, sev, taskId, additionalProperties){
-  if (CONF_KEY_GRANTEE != NULL) {
+  if (!is.null(CONF_KEY_GRANTEE)) {
     payload <- get_payload(message, sev, CONF_KEY_GRANTEE, taskId, additionalProperties)
     if (IS_DEBUG) {
         print(payload)
@@ -42,7 +42,7 @@ log <- function(message, sev, taskId, additionalProperties){
       print(http_status(r))
     }
 
-    if (CONF_KEY_AI4E != NULL){
+    if (!is.null(CONF_KEY_AI4E)){
       payload <- get_payload(message, sev, CONF_KEY_AI4E, taskId, additionalProperties)
       if (IS_DEBUG) {
         print(payload)
