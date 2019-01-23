@@ -1,11 +1,35 @@
-FROM mcr.microsoft.com/aiforearth/base-py:latest
+# Pull in the AI for Earth Base Image, so we can extract necessary libraries.
+FROM mcr.microsoft.com/aiforearth/base-py:latest as ai4e_base
 
+# Use any compatible Ubuntu-based image as your selected base image.
+FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
+# Copy the AI4E tools and libraries to our container.
+COPY --from=ai4e_base /ai4e_api_tools /ai4e_api_tools
+
+# Add the AI4E API source directory to the PATH.
+ENV PATH /usr/local/envs/ai4e_py_api/bin:$PATH
+# Add the AI4E tools directory to the PYTHONPATH.
+ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
+
+# Install Miniconda, Flask, Supervisor, uwsgi
+RUN ./ai4e_api_tools/requirements/install-api-hosting-reqs.sh
+
+# Install Azure Blob SDK
+RUN ./ai4e_api_tools/requirements/install-azure-blob.sh
+
+# Install Application Insights
+RUN ./ai4e_api_tools/requirements/install-appinsights.sh
+
+# Install Opencensus
+RUN ./ai4e_api_tools/requirements/install-opencensus.sh
+EXPOSE 55678 50001
+
+# Now add our custom image commands ---------------------------------------------------
 # Example of installing additonal Anaconda packages - numpy and pandas
 RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
     && conda install -c conda-forge -n ai4e_py_api numpy pandas
 
 RUN /usr/local/envs/ai4e_py_api/bin/pip install --upgrade pip
-
 RUN /usr/local/envs/ai4e_py_api/bin/pip install tensorflow pillow
 
 # Note: supervisor.conf reflects the location and name of your api code.
