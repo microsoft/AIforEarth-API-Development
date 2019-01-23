@@ -5,8 +5,6 @@ FROM mcr.microsoft.com/aiforearth/base-py:latest as ai4e_base
 FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
 # Copy the AI4E tools and libraries to our container.
 COPY --from=ai4e_base /ai4e_api_tools /ai4e_api_tools
-RUN ls -la /
-RUN ls -la /ai4e_api_tools
 
 # Add the AI4E API source directory to the PATH.
 ENV PATH /usr/local/envs/ai4e_py_api/bin:$PATH
@@ -14,19 +12,17 @@ ENV PATH /usr/local/envs/ai4e_py_api/bin:$PATH
 ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
 
 # Install Miniconda, Flask, Supervisor, uwsgi
-RUN ./ai4e_api_tools/requirements/install-miniconda-flask.sh
+RUN ./ai4e_api_tools/requirements/install-api-hosting-reqs.sh
 
 # Install Azure Blob SDK
 RUN ./ai4e_api_tools/requirements/install-azure-blob.sh
 
+# Install Application Insights
+RUN ./ai4e_api_tools/requirements/install-appinsights.sh
+
 # Install Opencensus
 RUN ./ai4e_api_tools/requirements/install-opencensus.sh
 EXPOSE 55678 50001
-
-# Install Application Insights
-RUN /usr/local/envs/ai4e_py_api/bin/pip install applicationinsights
-RUN mkdir /app_insights_data
-RUN chmod +w /app_insights_data
 
 # Now add our custom image commands ---------------------------------------------------
 # Example of installing additonal Anaconda packages - numpy and pandas

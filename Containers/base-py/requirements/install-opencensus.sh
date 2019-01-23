@@ -1,5 +1,5 @@
 apt-get update -y
-apt-get install wget apt-transport-https -y
+apt-get install apt-utils wget apt-transport-https -y
 
 wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
 dpkg -i packages-microsoft-prod.deb
@@ -7,7 +7,7 @@ dpkg -i packages-microsoft-prod.deb
 apt-get update
 apt-get install aspnetcore-runtime-2.1 -y
 
-pip install grpcio opencensus
+/usr/local/envs/ai4e_py_api/bin/pip install grpcio opencensus==0.1.7
 
 mkdir /lf
 

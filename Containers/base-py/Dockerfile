@@ -10,7 +10,7 @@ ENV PATH /usr/local/envs/ai4e_py_api/bin:$PATH
 ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
 
 # Install Miniconda, Flask, Supervisor, uwsgi
-RUN ./ai4e_api_tools/requirements/install-miniconda-flask.sh
+RUN ./ai4e_api_tools/requirements/install-api-hosting-reqs.sh
 
 # Install Azure Blob SDK
 RUN ./ai4e_api_tools/requirements/install-azure-blob.sh
@@ -19,9 +19,7 @@ RUN ./ai4e_api_tools/requirements/install-azure-blob.sh
 RUN ./ai4e_api_tools/requirements/install-opencensus.sh
 
 # Install Application Insights
-RUN /usr/local/envs/ai4e_py_api/bin/pip install applicationinsights
-RUN mkdir /app_insights_data
-RUN chmod +w /app_insights_data
+RUN ./ai4e_api_tools/requirements/install-appinsights.sh
 
 # Expose opencensus ports
 EXPOSE 55678
