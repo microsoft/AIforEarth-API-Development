@@ -12,4 +12,4 @@ This example demonstrates how to mount an Azure Blob as a local virtual file sys
 
     Note: You may map as many containers as you would like in this file. The blob mounter will mount all of them.
 4. Build your container with: `docker build .`. The final output line will state `Successfully built <image_id>`.
-5. Run your example: `docker run -p 8001:80 --cap-add SYS_ADMIN --device /dev/fuse <image_id>`.
+5. Run your example: `docker run -p 8001:80 --privileged --cap-add SYS_ADMIN --device /dev/fuse <image_id>`.
