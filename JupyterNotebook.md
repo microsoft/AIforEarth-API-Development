@@ -21,5 +21,7 @@ Here are the suggestions for the outline of your notebook.
 Please choose a descriptive name for your notebook (and any config files if needed).  The format organization-apiName-demo.ipynb would work well, where organization is your company or univeristy name and the api name describes the purpose of your machine learning model.  
 	
 We should get as close as we can to only three cells before the action happens: (1) one cell for constants, imports, and health check, (2) one cell for function definitions, and (3) one cell to retrieve and display sample input.  Each should have a ### heading saying what's going on, and in general those headings should be similar or identical across notebooks.  Merging into a small number of cells really streamlines the demo workflow and avoids lots of clicking.  
-	
+
+If there are details that you don't want to be visible to the audience during a demo (such as connection string information to an Azure blob storage account), you are welcome to provide a configuration file as well.  
+
 When we log in to demo, output should be clear (it really steals the demo thunder when you see the API result before you call the API), so to disable autosave from saving the output, add %autosave 0.  This can be done in the "Imports and Constants" section.  
