@@ -57,10 +57,10 @@ Currently, we offer two base image platform choices: Python and R and have an op
 If you require an image with a different technology stack, we'd love to hear from you so we can expand our offerings.
 
 ## Step 2: Build an example service
-To demonstrate how easy it is to run an API service in Azure, we'll explore the base-py example.
+To demonstrate how easy it is to run an API service in Azure, we'll explore the `base-py` example.
 
 ### Orientation
-Under the examples/base-py directory, we find these objects:
+Under the `examples/base-py` directory, we find these objects:
 - [my_api](./examples/base-py/my_api) folder [Contains the API service files.]
     - [runserver.py](./examples/base-py/my_api/runserver.py) [Contains the sample API service code.]
 - [Dockerfile](./examples/base-py/Dockerfile) [A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. This Dockerfile contains all the commands needed to run the example API service.]
@@ -71,7 +71,7 @@ Under the examples/base-py directory, we find these objects:
 We explore the API file components via an outside-in approach, starting with the Dockerfile.
 
 ### [Dockerfile](./examples/base-py/Dockerfile)
-If you are unfamiliar with Docker or container technologies, we enourage you to review the Docker [Get Started](https://docs.docker.com/get-started/) documentation.
+If you are unfamiliar with Docker or container technologies, we encourage you to review the Docker [Get Started](https://docs.docker.com/get-started/) documentation.
 
 Dockerfile walkthrough:
 
@@ -93,9 +93,9 @@ RUN chmod +x /startup.sh
 
 COPY ./LocalForwarder.config /lf/
 ```
-- Copy the API service directory into the container (your API service code will be placed in the /app/my_api directory).
+- Copy the API service directory into the container (your API service code will be placed in the `/app/my_api` directory).
 - Copy the supervisor configuration file to the proper location.
-- Copy the startup.sh bash script and add execute permission to it.
+- Copy the `startup.sh` bash script and add execute permission to it.
 
 ```Dockerfile 
 ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
@@ -109,7 +109,7 @@ ENV SERVICE_MODEL_FRAMEWORK "Python"
 ENV SERVICE_MODEL_FRAMEOWRK_VERSION "3.6.6"
 ENV SERVICE_MODEL_VERSION "1.0"
 ```
-- All logging and metric collection flows through Application Insights. Set the APPINSIGHTS_INSTRUMENTATIONKEY environment varaible to your instrumentation key. This is required when offering an official AI for Earth API, but is highly suggested otherwise. If you wish not to use Application Insights, you can safely remove this line.  All of the SERVICE_ prefixed environment variables offer logging filters within Application Insights.
+- All logging and metric collection flows through Application Insights. Set the APPINSIGHTS_INSTRUMENTATIONKEY environment variable to your instrumentation key. This is required when offering an official AI for Earth API, but is highly suggested otherwise. If you wish not to use Application Insights, you can safely remove this line.  All of the SERVICE_ prefixed environment variables offer logging filters within Application Insights.
 
 
 ```Dockerfile
@@ -196,7 +196,7 @@ api.add_resource(Tasker, my_api_prefix)
 Now that you have your container code completed, we can build your container and run it locally.
 
 ### Build an image
-From within the context of your service directory (eg. ./examples/base-py), execute the command to build your image.
+From within the context of your service directory (eg. .`/examples/base-py`), execute the command to build your image.
 ```Bash
 docker build . -t <your_ACR_login_server>/<your_service_name>:<build_number>
 ```
@@ -213,7 +213,7 @@ base-py example:
 ```Bash
 docker run -p 8081:80 "ai4eregistry.azurecr.io/grantee-py-example:1"
 ```
-Notice that, in the above example, we map our computer's port 8081 to the container's port 80. This reflects the container port we exposed in our Dockerfile and defined in the command in our supervisord.conf file.
+Notice that, in the above example, we map our computer's port `8081` to the container's port `80`. This reflects the container port we exposed in our Dockerfile and defined in the command in our supervisord.conf file.
 
 If you need to log into the image while it's running to debug, etc.:
 ```Bash
