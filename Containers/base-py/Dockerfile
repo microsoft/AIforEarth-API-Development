@@ -3,8 +3,6 @@ ARG  BASE_IMAGE=nvidia/cuda:9.2-runtime-ubuntu16.04
 FROM $BASE_IMAGE
 
 COPY ./base-py/requirements /ai4e_api_tools/requirements
-COPY ./base-py/ai4e_api_tools /ai4e_api_tools/
-COPY ./common/sas_blob.py /ai4e_api_tools/
 
 ENV PATH /usr/local/envs/ai4e_py_api/bin:$PATH
 ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
@@ -20,6 +18,10 @@ RUN ./ai4e_api_tools/requirements/install-opencensus.sh
 
 # Install Application Insights
 RUN ./ai4e_api_tools/requirements/install-appinsights.sh
+
+COPY ./base-py/ai4e_api_tools /ai4e_api_tools/
+COPY ./common/sas_blob.py /ai4e_api_tools/
+COPY ./common/aad_blob.py /ai4e_api_tools/
 
 # Expose opencensus ports
 EXPOSE 55678

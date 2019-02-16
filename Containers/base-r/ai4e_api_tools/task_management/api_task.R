@@ -51,6 +51,12 @@ UpdateTaskStatus<-function(taskId, status){
   }
 }
 
+AddPipelineTask<-function(taskId, organization_moniker, version, api_name, body) {
+    next_url = paste(organization_moniker, version, api_name, sep = "/")
+    UpdateTaskStatus(taskId, paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+    return(paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+}
+
 #* Get status of task by id
 #* @param taskId The id of the task
 #* @get /task/<taskId>
