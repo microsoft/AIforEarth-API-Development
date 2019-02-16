@@ -101,11 +101,14 @@ RUN Rscript -e 'install.packages("sjmisc");'
 RUN Rscript -e 'install.packages("reticulate");'
 
 # Install Azure Blob SDK and application insights
-RUN pip install azure \
-    && pip install azure-storage-blob \
-    && pip install applicationinsights
+RUN pip install azure
+RUN pip install azure-storage-common
+RUN pip install azure-storage-blob
+RUN pip install adal
+RUN pip install applicationinsights
 
 COPY ./base-r/ai4e_api_tools /ai4e_api_tools/
 COPY ./common/sas_blob.py /ai4e_api_tools/
+COPY ./common/aad_blob.py /ai4e_api_tools/
 
 ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
