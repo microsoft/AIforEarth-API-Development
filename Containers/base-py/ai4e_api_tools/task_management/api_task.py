@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import random, datetime
 from flask_restful import Resource
-from urllib.parse import urlunparse
 
 print("Creating API task manager.")
 
@@ -37,7 +36,7 @@ class ApiTaskManager:
             self.status_dict[taskId] = (status, stat[1], stat[2])
 
     def AddPipelineTask(self, taskId, organization_moniker, version, api_name, body):
-        next_url = urlunparse((None, None, organization_moniker + '/' + version + '/' + api_name))
+        next_url = organization_moniker + '/' + version + '/' + api_name
         UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
         return "Pipelining is not supported in a single node deployment, but the next service is: " + next_url
 
