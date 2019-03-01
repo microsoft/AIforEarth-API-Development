@@ -1,6 +1,16 @@
 # AI for Earth Hosted Acceptance Criteria
 AI for Earth Grantees have the option of hosting their completed APIs on the official AI for Earth API platform.  These APIs are subject to the AI for Earth acceptance criteria.  Each of the following sections identify a requirement that must be met before the API is migrated to the AI for Earth hosting platform.
 
+## Contents
+  1. [API Design](#API-Design)
+  2. [Testing](#Testing)
+  3. [Documentation](#Documentation)
+  4. [Kubernetes](#Kubernetes)
+  5. [Reliability](#Reliability)
+  6. [Devops](#Devops)
+  7. [Telemetry](#Telemetry)
+  8. [Publishing to the AI for Earth API Platform](#Publishing-to-the-AI-for-Earth-API-Platform)
+
 ## API Design
 
 ### Input validation
@@ -138,3 +148,16 @@ Absolutely no PII (personally identifiable information) shall be collected by th
 
 ### Alerting
 Identify alert conditions based on the collected telemetry.  Include the response to such alerts in the DevOps playbook.
+
+## Publishing to the AI for Earth API Platform
+An AI for Earth engineer must perform the publishing to the platform, but before they can do so, the your image must be made available to the AI for Earth team.  Please follow these steps to complete this process.
+
+1. [Create an Azure Container Registry](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-azure-cli) in your Azure subscription.
+2. [Tag and push](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-azure-cli#push-image-to-registry) your image to the repository. The images must be versioned. Internally, we use the following naming pattern:
+```
+<ACR_name>.azurecr.io/<grantee_moniker>/<image_version>-<api_name>:<build_number>
+```
+3. Contact the AI for Earth Engineering Team to obtain the AI for Earth publisher [Azure Active Directory application name](https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals). This application will be used to deploy your API image to the AI for Earth API Platform.
+4. [Grant 'AcrPull' role access](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-authentication#service-principal) to the Azure AD application from step 3.
+5. Ensure that your API's documentation is up-to-date and the API has been fully tested and verified.
+6. Notify the AI for Earth Engineering Team of your intention to deploy to production.
