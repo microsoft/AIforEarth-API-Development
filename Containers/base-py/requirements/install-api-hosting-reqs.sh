@@ -4,7 +4,7 @@ export PATH=/opt/conda/bin:$PATH
 mkdir /var/uwsgi
 
 apt-get update --fix-missing
-apt-get install -y curl supervisor bzip2
+apt-get install -y supervisor bzip2
 
 apt-get -qq update && apt-get -qq -y install curl 
 curl -sSL https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -o /tmp/miniconda.sh 
