@@ -1,0 +1,245 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "AI for Earth Landcover API",
+      "version": "v0.1",
+      "description": "This specification represents the core [AI for Earth](https://www.microsoft.com/en-us/aiforearth) API offering. An access key is required for access."
+    },
+    "host": "aiforearth.azure-api.net",
+    "basePath": "/v0.1",
+    "schemes": [
+      "https"
+    ],
+    "securityDefinitions": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
+      },
+      "apiKeyQuery": {
+        "type": "apiKey",
+        "name": "subscription-key",
+        "in": "query"
+      }
+    },
+    "security": [
+      {
+        "apiKeyHeader": []
+      },
+      {
+        "apiKeyQuery": []
+      }
+    ],
+    "paths": {
+      "/landcover/classify": {
+        "post": {
+          "description": "This operation classifies the landcover for a given region based on the provided satellite image. The provided image must be a Tiff file with 4 bands representing the red, green, blue and near-infrared value of the pixel.\n\nA successful classification will return an image file corresponding to the landcover of the provided image. The following labels are possible with the corresponding color labels:\n- <b>No Data</b> - black (0, 0 ,0)\n- <b>Water</b> - blue (0, 0, 255)\n- <b>Trees</b> - dark green (0, 128, 0)\n- <b>Herbaceous</b> - light green (128, 255, 128)\n- <b>Barren/Impervious</b> - brown (128, 96, 96)",
+          "operationId": "5ab5905bb8d61f0e48853404",
+          "summary": "/landcover/classify",
+          "parameters": [
+            {
+              "name": "type",
+              "in": "query",
+              "description": "File type of the returned image. Supported values are:\n- tiff (default)\n- jpeg",
+              "type": "string",
+              "default": "tiff",
+              "enum": [
+                "tiff",
+                "jpeg"
+              ]
+            },
+            {
+              "name": "Content-Type",
+              "in": "header",
+              "description": "Media type of the request body. Currently only image/tiff is supported.",
+              "required": true,
+              "type": "string",
+              "enum": [
+                "image/tiff"
+              ]
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The response body will contain an image file with the land cover labels.  The image will be colored corresponding the the following labels:\n- <b>No Data</b> - black (0, 0 ,0)\n- <b>Water</b> - blue (0, 0, 255)\n- <b>Trees</b> - dark green (0, 128, 0)\n- <b>Herbaceous</b> - light green (128, 255, 128)\n- <b>Barren/Impervious</b> - brown (128, 96, 96)\n\nThe size of the output image will be the same as a minus a 64 pixel border around the image. For example, if the input image is 256 pixels by 256 pixels the output image will be 128 pixels by 128 pixels.",
+              "examples": {
+                "image/jpeg": "[binary image data]",
+                "image/tiff": "[binary image data]"
+              }
+            },
+            "400": {
+              "description": "Possible Errors: \n<ul>\n<li><b>InvalidImageFormat</b>\n<br/>Input data is not a valid image.</li>\n<li><b>InvalidImageSize</b>\n<br/>Input image is too large or too small.</li>\n</ul>"
+            },
+            "415": {
+              "description": "Unsupported media type in the request body. Currently only image/tiff is supported"
+            }
+          },
+          "produces": [
+            "image/jpeg",
+            "image/tiff",
+            "application/json"
+          ]
+        }
+      },
+      "/landcover/details": {
+        "post": {
+          "description": "This operation classifies the landcover for a given region based on the provided satellite image. The response will contain an image file with the classification along with details about the breakdown of each label in the image.\n\n The provided image must be a Tiff file with 4 bands representing the red, green, blue and near-infrared value of the pixel.\n\nA successful classification will return an image file corresponding to the landcover of the provided image. The following labels are possible with the corresponding color labels:\n- <b>No Data</b> - black (0, 0 ,0)\n- <b>Water</b> - blue (0, 0, 255)\n- <b>Trees</b> - dark green (0, 128, 0)\n- <b>Herbaceous</b> - light green (128, 255, 128)\n- <b>Barren/Impervious</b> - brown (128, 96, 96)\n\nThe label breakdown section contains each label that appears in the image, along with the percentage of pixels that are classified with that label.",
+          "operationId": "5ada78aab225207e719fa59b",
+          "summary": "/landcover/details",
+          "parameters": [
+            {
+              "name": "type",
+              "in": "query",
+              "description": "File type of the returned image. Supported values are:\n- tiff (default)\n- jpeg\n",
+              "type": "string",
+              "default": "tiff",
+              "enum": [
+                "tiff",
+                "jpeg"
+              ]
+            },
+            {
+              "name": "Content-Type",
+              "in": "header",
+              "description": "Media type of the request body. Currently only image/tiff is supported.\n",
+              "required": true,
+              "type": "string",
+              "enum": [
+                "image/tiff"
+              ]
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The response body will contain an image file with the land cover labels along with a dictionary containing all the labels containing a given image and the percent of the image predicted to contain that label. The possible labels are listed below.\n- <b>No Data</b> - black (0, 0 ,0)\n- <b>Water</b> - blue (0, 0, 255)\n- <b>Trees</b> - dark green (0, 128, 0)\n- <b>Herbaceous</b> - light green (128, 255, 128)\n- <b>Barren/Impervious</b> - brown (128, 96, 96)\n\nThe size of the output image will be the same as a minus a 64 pixel border around the image. For example, if the input image is 256 pixels by 256 pixels the output image will be 128 pixels by 128 pixels.",
+              "examples": {
+                "application/json": {
+                  "image_data": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAEAAQADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDiqKKK+aPkAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//Z",
+                  "label_breakdown": {
+                    "No Data": 0,
+                    "Trees": 1,
+                    "Water": 0
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Possible Errors: \r\n<ul>\r\n<li><b>EmptyImage</b>\r\n<br/>An image was not supplied.\r\n</li>\r\n<li><b>InvalidImageFormat</b>\r\n<br/>Input data is not a valid image.</li>\r\n<li><b>InvalidImageSize</b>\r\n<br/>Input image is too large or too small.</li>\r\n</ul>"
+            },
+            "415": {
+              "description": "Unsupported media type in the request body. Currently only image/tiff is supported"
+            }
+          },
+          "produces": [
+            "application/json"
+          ]
+        }
+      }
+    },
+    "definitions": {
+      "GeoTile": {
+        "type": "object",
+        "required": [
+          "lon",
+          "lat"
+        ],
+        "properties": {
+          "lon": {
+            "type": "number"
+          },
+          "lat": {
+            "type": "number"
+          }
+        }
+      },
+      "GeoImage": {
+        "type": "object",
+        "required": [
+          "lon",
+          "lat",
+          "location",
+          "model",
+          "classification",
+          "options"
+        ],
+        "properties": {
+          "lon": {
+            "type": "number"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "location": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CacheRequest": {
+        "type": "object",
+        "required": [
+          "lon",
+          "lat",
+          "radius",
+          "tiles"
+        ],
+        "properties": {
+          "lon": {
+            "type": "number"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "radius": {
+            "type": "number"
+          },
+          "model": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/GeoTile"
+            }
+          }
+        }
+      },
+      "Cache": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/GeoImage"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/GeoImage"
+            }
+          }
+        }
+      },
+      "Body": {
+        "example": "[Binary image data]"
+      }
+    }
+  }
