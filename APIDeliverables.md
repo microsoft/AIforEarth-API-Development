@@ -7,7 +7,11 @@ Select AI for Earth grant recipients are being funded to provide AI for Earth AP
 + [Documentation](#doc)
 + [Assets for website](#assets)
 
-The container should be uploaded to a container registry.  All other material (or links to material) should be emailed to aiforearthcommunity@microsoft.com.  
+The container should be uploaded to a container registry (more details below).  The Jupyter notebook, documentation, and website assets should be submitted via pull request to a private git repo at https://aiforearth.visualstudio.com/_git/AIforEarth-API-Push.  
+
+Prior to submitting your work, you will need to contact us to provide the email address of the individual who will own uploading to the git repository above and to the container registry.  This is in order to grant appropriate permissions.  Please email aiforearthcommunity@microsoft.com with the subject line = "API push request" and the body of your email containing the email address of the person who will be responsible for submission.  
+
+If you have questions, please contact aiforearthcommunity@microsoft.com.  
 
 
 ## <a name="container">Container with machine learning model</a>
@@ -19,10 +23,10 @@ The actual delivery of your API can be done via a Docker container.
 	docker login --username <username> --password <password> ai4egrantee.azurecr.io
 	docker push ai4egrantee.azurecr.io/your_custom_image_name:tag
     ```
-+ Please send an email to aiforearthcommunity@microsoft.com with the subject line = “Container push request” and the body of your email containing the email address of the person who will push the container (so we can grant that email address the appropriate permissions to push to our container registry).  
++ Please send an email to aiforearthcommunity@microsoft.com with the subject line = "API push request" and the body of your email containing the email address of the person who will push the container (so we can grant that email address the appropriate permissions to push to our container registry).  
 + In terms of testing, please ensure that your code meets the defined [acceptance criteria](./AcceptanceCriteria.md).  
 
-**Alternate option:** People can either provide a container that meets the acceptance criteria, or they can relax/lower the bar on acceptance criteria and provide a code drop with a semi-functional container.
+**Alternate option:** People can either provide a container that meets the acceptance criteria, or they can relax/lower the bar on acceptance criteria and provide their source code with a semi-functional container.
 
 
 ## <a name="notebook">Jupyter Notebook</a>
