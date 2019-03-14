@@ -17,11 +17,12 @@ If you have questions, please contact aiforearthcommunity@microsoft.com.
 ## <a name="container">Container with machine learning model</a>
 The actual delivery of your API can be done via a Docker container.  
 + Please follow the directions [here](./Quickstart.md) to create the Docker container.  
-    + In step 8, when you build your Docker image, please tag it using the tag “<grantee_moniker>/<image_name>”.  
+    + In step 8, when you build your Docker image, please tag it using the tag:
+		“ai4egrantee.azurecr.io/<grantee_moniker>/<image_version>-<api_name>:<build_number>”
 	+ Replace step 10-11 with publishing to our AI for Earth container registry.  Use the following commands:
     ```
 	docker login --username <username> --password <password> ai4egrantee.azurecr.io
-	docker push ai4egrantee.azurecr.io/your_custom_image_name:tag
+	docker push ai4egrantee.azurecr.io/<grantee_moniker>/<image_version>-<api_name>:<build_number>
     ```
 + Please send an email to aiforearthcommunity@microsoft.com with the subject line = "API push request" and the body of your email containing the email address of the person who will push the container (so we can grant that email address the appropriate permissions to push to our container registry).  
 + In terms of testing, please ensure that your code meets the defined [acceptance criteria](./AcceptanceCriteria.md).  
