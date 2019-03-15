@@ -40,6 +40,12 @@ class ApiTaskManager:
         UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
         return "Pipelining is not supported in a single node deployment, but the next service is: " + next_url
 
+    def CompleteTask(self, taskId, status):
+        self.UpdateTaskStatus(taskId, status)
+
+    def FailTask(self, taskId, status):
+        self.UpdateTaskStatus(taskId, status)
+
     def GetTaskStatus(self, taskId):
         if taskId in self.status_dict:
             return self.status_dict[taskId]
