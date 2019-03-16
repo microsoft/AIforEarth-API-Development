@@ -5,7 +5,6 @@
 from time import sleep
 import json
 from flask import Flask, request, abort
-from flask_restful import Resource, Api
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import AI4EService
 from os import getenv
@@ -48,7 +47,7 @@ def run_model(taskId, body):
     methods = ['POST'], 
     request_processing_function = process_request_data, # This is the data process function that you created above.
     maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
-    content_type = 'application/json',
+    content_types = ['application/json'],
     content_max_length = 1000, # In bytes
     trace_name = 'post:my_long_running_funct')
 def default_post(*args, **kwargs):

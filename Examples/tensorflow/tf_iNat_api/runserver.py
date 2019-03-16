@@ -2,10 +2,9 @@
 # libraries directly.
 from task_management.api_task import ApiTaskManager
 from flask import Flask, request, send_file, abort
-from flask_restful import Resource, Api
 from ai4e_app_insights import AppInsights
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EWrapper
+from ai4e_service import AI4EService
 from sas_blob import SasBlob
 from PIL import Image
 import tf_detector
@@ -20,63 +19,54 @@ print("Creating Application")
 ACCEPTED_CONTENT_TYPES = ['image/png', 'application/octet-stream', 'image/jpeg']
 blob_access_duration_hrs = 1
 
-api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
-api = Api(app)
-
-# Log requests, traces and exceptions to the Application Insights service
-appinsights = AppInsights(app)
 
 # Use the AI4EAppInsights library to send log messages.
 log = AI4EAppInsights()
 
-# Use the internal-container AI for Earth Task Manager (not for production use!).
-api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
-
-ai4e_wrapper = AI4EWrapper(app)
+# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# handles SIGTERM signals from AKS, etc., and handles concurrent requests.
+with app.app_context():
+    ai4e_service = AI4EService(app, log)
 
 # Load the model
 # The model was copied to this location when the container was built; see ../Dockerfile
 model_path = '/app/tf_iNat_api/frozen_inference_graph.pb'
 detection_graph = tf_detector.load_model(model_path)
 
-# Healthcheck endpoint - this lets us quickly retrieve the status of your API.
-@app.route('/', methods=['GET'])
-def health_check():
-    return "Health check OK"
+# Define a function for processing request data, if appliciable.  This function loads data or files into
+# a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
+def process_request_data(request):
+    return_values = {'image_bytes': None}
+    try:
+        # Attempt to load the body
+        return_values['image_bytes'] = BytesIO(request.data)
+    except:
+        log.log_error('Unable to load the request data')   # Log to Application Insights
+    return return_values
 
 # POST, async API endpoint example
-@app.route(api_prefix + '/detect', methods=['POST'])
-def post():
-    if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
-        return abort(415, "Unable to process request. Only png or jpeg files are accepted as input")
-
-    # Add a task and extract its id, so the caller can keep track of it.
-    task_info = api_task_manager.AddTask('queued')
-    taskId = str(task_info["uuid"])
-
-    image_bytes = BytesIO(request.data)
-
-    # wrap_async_endpoint executes your function in a new thread and wraps it within a logging trace. 
-    ai4e_wrapper.wrap_async_endpoint(detect, "post:detect", taskId = taskId, image=image_bytes)
-
-    # Always return the taskId to the caller.
-    return 'TaskId: ' + taskId
-
-def detect(**kwargs):
+@ai4e_service.api_async_func(
+    api_path = '/detect', 
+    methods = ['POST'], 
+    request_processing_function = process_request_data, # This is the data process function that you created above.
+    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    content_types = ACCEPTED_CONTENT_TYPES,
+    content_max_length = 10000, # In bytes
+    trace_name = 'post:detect')
+def detect(*args, **kwargs):
     print('runserver.py: detect() called, generating detections...')
-    taskId = kwargs.get('taskId', None)
-    image_bytes = kwargs.get('image', None)
+    image_bytes = kwargs.get('image_bytes')
 
     # Update the task status, so the caller knows it has been accepted and is running.
-    api_task_manager.UpdateTaskStatus(taskId, 'running - generate_detections')
+    ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'running - generate_detections')
 
     try:
         image = tf_detector.open_image(image_bytes)
         boxes, scores, clsses, image = tf_detector.generate_detections(
             detection_graph, image)
 
-        api_task_manager.UpdateTaskStatus(taskId, 'rendering boxes')
+        ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'rendering boxes')
 
         # image is modified in place
         # here confidence_threshold is hardcoded, but you can ask that as a input from the request
@@ -100,21 +90,11 @@ def detect(**kwargs):
         # Write the image to the blob
         sas_blob_helper.write_blob(sas_url, 'detect_output.jpg', output_img_stream)
         
-        api_task_manager.UpdateTaskStatus(taskId, 'completed - output written to: ' + sas_url)
+        ai4e_service.api_task_manager.CompleteTask(taskId, 'completed - output written to: ' + sas_url)
         print('runserver.py: detect() finished.')
     except:
         log.log_exception(sys.exc_info()[0], taskId)
-        api_task_manager.UpdateTaskStatus(taskId, 'failed: ' + str(sys.exc_info()[0]))
-
-# GET, sync API endpoint example
-@app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
-def echo(text):
-    # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:my_long_running_funct", echo_text=text)
-
-def my_sync_function(**kwargs):
-    echo_text = kwargs.get('echo_text', '')
-    return 'Echo: ' + echo_text
+        ai4e_service.api_task_manager.FailTask(taskId, 'failed: ' + str(sys.exc_info()[0]))
 
 if __name__ == '__main__':
     app.run()

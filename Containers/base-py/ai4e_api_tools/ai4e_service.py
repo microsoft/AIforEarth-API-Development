@@ -45,10 +45,10 @@ class AI4EService():
     def health_check(self):
         return 'Health check OK'
     
-    def api_func(self, is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_type = None, content_max_length = None, trace_name = None, *args, **kwargs):
+    def api_func(self, is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types = None, content_max_length = None, trace_name = None, *args, **kwargs):
         def decorator_api_func(func):
             if not api_path in self.func_properties:
-                self.func_properties[api_path] = {MAX_REQUESTS_KEY_NAME: maximum_concurrent_requests, CONTENT_TYPE_KEY_NAME: content_type, CONTENT_MAX_KEY_NAME: content_max_length}
+                self.func_properties[api_path] = {MAX_REQUESTS_KEY_NAME: maximum_concurrent_requests, CONTENT_TYPE_KEY_NAME: content_types, CONTENT_MAX_KEY_NAME: content_max_length}
                 self.func_request_counts[api_path] = 0
 
             @wraps(func)
@@ -76,13 +76,13 @@ class AI4EService():
             self.app.add_url_rule(self.api_prefix + api_path, view_func = api, methods=methods, provide_automatic_options=True)
         return decorator_api_func
 
-    def api_async_func(self, api_path, methods, request_processing_function = None, maximum_concurrent_requests = None, content_type = None, content_max_length = None, trace_name = None, *args, **kwargs):
+    def api_async_func(self, api_path, methods, request_processing_function = None, maximum_concurrent_requests = None, content_types = None, content_max_length = None, trace_name = None, *args, **kwargs):
         is_async = True
-        return self.api_func(is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_type = None, content_max_length = None, trace_name = None, *args, **kwargs)
+        return self.api_func(is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types, content_max_length, trace_name, *args, **kwargs)
 
-    def api_sync_func(self, api_path, methods, request_processing_function = None, maximum_concurrent_requests = None, content_type = None, content_max_length = None, trace_name=None, *args, **kwargs):
+    def api_sync_func(self, api_path, methods, request_processing_function = None, maximum_concurrent_requests = None, content_types = None, content_max_length = None, trace_name=None, *args, **kwargs):
         is_async = False
-        return self.api_func(is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_type = None, content_max_length = None, trace_name = None, *args, **kwargs)
+        return self.api_func(is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types, content_max_length, trace_name, *args, **kwargs)
 
     def initialize_term(signum, frame):
         print('Signal handler called with signal: ' + signum)
@@ -98,7 +98,7 @@ class AI4EService():
             if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
                 abort(503, {'message': 'Service is busy, please try again later.'})
 
-            if (self.func_properties[request.path][CONTENT_TYPE_KEY_NAME] and not request.content_type == self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]):
+            if (self.func_properties[request.path][CONTENT_TYPE_KEY_NAME] and not request.content_type in self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]):
                 abort(401, {'message': 'Content-type must be ' + self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]})
 
             if (self.func_properties[request.path][CONTENT_MAX_KEY_NAME] and request.content_length > self.func_properties[request.path][CONTENT_MAX_KEY_NAME]):
