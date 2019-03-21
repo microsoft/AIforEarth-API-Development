@@ -1,11 +1,8 @@
 # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
-from task_management.api_task import ApiTaskManager
-from flask import Flask, request, send_file, abort
-from ai4e_app_insights import AppInsights
+from flask import Flask, request
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import AI4EService
-from sas_blob import SasBlob
 from PIL import Image
 import tf_detector
 from io import BytesIO

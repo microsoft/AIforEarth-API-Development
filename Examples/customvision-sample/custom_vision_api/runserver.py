@@ -1,11 +1,9 @@
 # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
 from flask import Flask, request
-from flask_restful import Resource, Api
 import json
-from ai4e_app_insights import AppInsights
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EWrapper
+from ai4e_service import AI4EService
 import sys
 from os import getenv
 
@@ -20,49 +18,38 @@ project_id = getenv('CUSTOM_VISION_PROJECT_ID')
 
 print("Creating Application")
 
-api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
-api = Api(app)
-print(api_prefix)
 
-# Log requests, traces and exceptions to the Application Insights service
-appinsights = AppInsights(app)
-
-# Use the AI4EAppInsights library to send log messages.
-log = AI4EAppInsights()
-
-# The API4EWrapper instruments your functions so that trace metrics are logged.
-ai4e_wrapper = AI4EWrapper(app)
-
-# Healthcheck endpoint - this lets us quickly retrieve the status of your API.
-@app.route('/', methods=['GET'])
-def health_check():
-    return "Health check OK"
+# Define a function for processing request data, if appliciable.  This function loads data or files into
+# a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
+def process_request_data(request):
+    return_values = {'post_body': None}
+    try:
+        # Attempt to load the body
+        return_values['post_body'] = json.loads(request.data)
+    except:
+        log.log_error('Unable to load the request data')   # Log to Application Insights
+    return return_values
 
 # POST, sync API endpoint example
-@app.route(api_prefix + '/', methods=['POST'])
+@ai4e_service.api_sync_func(
+    api_path = '/', 
+    methods = ['POST'], 
+    request_processing_function = process_request_data, # This is the data process function that you created above.
+    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    content_types = ['application/json'],
+    content_max_length = 10000, # In bytes
+    trace_name = 'post:predict_image')
 def post():
-    try:
-        post_body = json.loads(request.data)
-    except:
-        return "Unable to parse the request body. Please request with valid json."
-
-    # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(predict_image, "post:predict_image", json_body = post_body)
-
-def predict_image(**kwargs):
-    json_body = kwargs.get('json_body', None)
-    if (not json_body):
-        log.log_error("Body is missing")
-        return -1
-
-    if (not "img_url" in json_body):
+    post_json = kwargs.get('post_body')
+    
+    if (not "img_url" in post_json):
         log.log_error("img_url is required as input.")
         return -1
 
     try:
         # Extract the img_url input from the json body
-        test_img_url = json_body["img_url"]
+        test_img_url = post_json["img_url"]
 
         # Here's how to debug
         print(test_img_url)         # You can check this in Postman 
