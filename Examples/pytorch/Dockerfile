@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/base-py:latest
+FROM ai4eregistry.azurecr.io/aiforearth/base-py:1.3
 
 RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
     && conda install -c conda-forge -n ai4e_py_api numpy pandas scipy \

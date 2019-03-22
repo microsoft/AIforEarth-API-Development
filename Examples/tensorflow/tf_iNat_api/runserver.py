@@ -3,6 +3,7 @@
 from flask import Flask, request
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import AI4EService
+from sas_blob import SasBlob
 from PIL import Image
 import tf_detector
 from io import BytesIO
