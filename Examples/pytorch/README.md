@@ -7,7 +7,7 @@ This example shows you how to deploy a PyTorch model via an AI for Earth contain
 
 You can download an Inception v3 mdoel trained on the iNaturalist dataset from this [page](https://github.com/macaodha/inat_comp_2018), at the link in "we also provide a trained model that can be downloaded from _here_".
 
-Place the downloaded model file `iNat_2018_InceptionV3.pth.tar` in the `pytorch_api` folder, which will be copied to the Docker container (see the `COPY` commands in `Dockerfile`). There are other ways of accessing a model, such as placing it in a Azure blob storage container (a unit of blob storage, do not confuse with Docker _containers_) and mount that blob container.
+Place the downloaded model file [iNat_2018_InceptionV3.pth.tar](http://vision.caltech.edu/~macaodha/inat2018/iNat_2018_InceptionV3.pth.tar) in the `pytorch_api` folder, which will be copied to the Docker container (see the `COPY` commands in `Dockerfile`). There are other ways of accessing a model, such as placing it in a Azure blob storage container (a unit of blob storage, do not confuse with Docker _containers_) and mount that blob container.
 
 Copy the file `inception.py` from the [inat_comp_2018](https://github.com/macaodha/inat_comp_2018) page and place it in the `pytorch_api` folder. We instantiate an Inception model in `pytorch_api/runserver.py` and load its weights from the model file.
 

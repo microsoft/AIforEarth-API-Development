@@ -2,95 +2,81 @@
 # Licensed under the MIT License.
 # # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
-from task_management.api_task import ApiTaskManager
-from flask import Flask, request
-from flask_restful import Resource, Api
 from time import sleep
 import json
-from ai4e_app_insights import AppInsights
+from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EWrapper
-import sys
+from ai4e_service import AI4EService
 from os import getenv
 
-print("Creating Application")
+print('Creating Application')
 
-api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
-api = Api(app)
 
-# Log requests, traces and exceptions to the Application Insights service
-appinsights = AppInsights(app)
-
-# Use the AI4EAppInsights library to send log messages.
+# Use the AI4EAppInsights library to send log messages. NOT REQURIED
 log = AI4EAppInsights()
 
-# Use the internal-container AI for Earth Task Manager (not for production use!).
-api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
+# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# handles SIGTERM signals from AKS, etc., and handles concurrent requests.
+with app.app_context():
+    ai4e_service = AI4EService(app, log)
 
-# Use the AI4EWrapper to executes your functions within a logging trace.
-# Also, helps support long-running/async functions.
-ai4e_wrapper = AI4EWrapper(app)
+# Define a function for processing request data, if appliciable.  This function loads data or files into
+# a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
+def process_request_data(request):
+    return_values = {'data': None}
+    try:
+        # Attempt to load the body
+        return_values['data'] = request.data
+    except:
+        log.log_error('Unable to load the request data')   # Log to Application Insights
+    return return_values
 
-@app.route('/', methods=['GET'])
-def health_check():
-    return "Health check OK"
+# Define a function that runs your model.  This could be in a library.
+def run_model(taskId, body):
+    # Update the task status, so the caller knows it has been accepted and is running.
+    ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'running model')
+
+    log.log_debug('Running model', taskId) # Log to Application Insights
+    #INSERT_YOUR_MODEL_CALL_HERE
+    sleep(10)  # replace with real code
 
 # POST, long-running/async API endpoint example
-@app.route(api_prefix + '/', methods=['POST'])
-def post():
-    # The AddTask function returns a dictonary of task information:
-    #   - uuid: taskId used to update/retrieve task status
-    #   - status: string that was passed via the AddTask or UpdateTaskStatus function
-    #   - timestamp
-    #   - endpoint: passed via the ApiTaskManager constructor
+@ai4e_service.api_async_func(
+    api_path = '/', 
+    methods = ['POST'], 
+    request_processing_function = process_request_data, # This is the data process function that you created above.
+    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    content_types = ['application/json'],
+    content_max_length = 1000, # In bytes
+    trace_name = 'post:my_long_running_funct')
+def default_post(*args, **kwargs):
+    # Since this is an async function, we need to keep the task updated.
+    taskId = kwargs.get('taskId')
+    log.log_debug('Started task', taskId) # Log to Application Insights
 
-    # Add a task and extract its id, so the caller can keep track of it.
-    task_info = api_task_manager.AddTask('queued')
-    taskId = str(task_info["uuid"])
+    # Get the data from the dictionary key that you assigned in your process_request_data function.
+    request_data = kwargs.get('data')
 
-    try:
-        post_body = json.loads(request.data)
-    except:
-        return "Unable to parse the request body. Please request with valid json."
-
-    # wrap_async_endpoint executes your function in a new thread and wraps it within a logging trace. 
-    ai4e_wrapper.wrap_async_endpoint(my_long_running_funct, "post:my_long_running_funct", taskId = taskId, json_body = post_body)
-
-    # Always return the taskId to the caller.
-    return 'TaskId: ' + taskId
-
-# GET, sync API endpoint example
-@app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
-def echo(text):
-    # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "post:echo", echo_text=text)
-
-def my_long_running_funct(**kwargs):
-    taskId = kwargs.get('taskId', None)
-    # Update the task status, so the caller knows it has been accepted and is running.
-    api_task_manager.UpdateTaskStatus(taskId, 'running')
-
-    json_body = kwargs.get('json_body', None)
-    if (not json_body):
-        # Log errors and make sure the status is updated.
-        log.log_error("Body is missing", taskId)
-        api_task_manager.UpdateTaskStatus(taskId, 'failed - Body is required')
+    if not request_data:
+        ai4e_service.api_task_manager.FailTask(taskId, 'Task failed - Body was empty or could not be parsed.')
         return -1
 
-    try:
-        #INSERT_YOUR_MODEL_CALL_HERE
-        sleep(10)  # replace with real code
-    except:
-        log.log_exception(sys.exc_info()[0], taskId)
+    # Load the request data into JSON format.
+    request_json = json.loads(request_data)
+
+    # Run your model function
+    run_model(taskId, request_json)
 
     # Once complete, ensure the status is updated.
-    log.log_debug("Completed task", taskId)
-    api_task_manager.UpdateTaskStatus(taskId, 'completed')
+    log.log_debug('Completed task', taskId) # Log to Application Insights
+    # Update the task with a completion event.
+    ai4e_service.api_task_manager.CompleteTask(taskId, 'completed')
 
-def my_sync_function(**kwargs):
-    echo_text = kwargs.get('echo_text', '')
-    return 'Echo: ' + echo_text
+# GET, sync API endpoint example
+@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'get:echo', kwargs = {'text'})
+def echo(*args, **kwargs):
+    return 'Echo: ' + kwargs['text']
 
 if __name__ == '__main__':
     app.run()

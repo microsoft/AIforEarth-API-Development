@@ -1,11 +1,10 @@
 # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
-from task_management.api_task import ApiTaskManager
-from flask import Flask, request, send_file, abort
+from flask import Flask, request, abort
 from flask_restful import Resource, Api
 from ai4e_app_insights import AppInsights
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EWrapper
+from ai4e_service import AI4EService
 from PIL import Image
 import pytorch_classifier
 from io import BytesIO
@@ -15,61 +14,49 @@ print("Creating Application")
 
 ACCEPTED_CONTENT_TYPES = ['image/png', 'application/octet-stream', 'image/jpeg']
 
-api_prefix = getenv('API_PREFIX')
 app = Flask(__name__)
-api = Api(app)
-
-# Log requests, traces and exceptions to the Application Insights service
-appinsights = AppInsights(app)
 
 # Use the AI4EAppInsights library to send log messages.
 log = AI4EAppInsights()
 
-# Use the internal-container AI for Earth Task Manager (not for production use!).
-api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=api_prefix)
-
-ai4e_wrapper = AI4EWrapper(app)
-
+# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# handles SIGTERM signals from AKS, etc., and handles concurrent requests.
+with app.app_context():
+    ai4e_service = AI4EService(app, log)
 
 # Load the model
 # The model was copied to this location when the container was built; see ../Dockerfile
 model_path = '/app/pytorch_api/iNat_2018_InceptionV3.pth.tar'
 model = pytorch_classifier.load_model(model_path)
 
-# Healthcheck endpoint - this lets us quickly retrieve the status of your API.
-@app.route('/', methods=['GET'])
-def health_check():
-    return "Health check OK"
+# Define a function for processing request data, if appliciable.  This function loads data or files into
+# a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
+def process_request_data(request):
+    print('Processing data...')
+    return_values = {'image_bytes': None}
+    try:
+        # Attempt to load the body
+        return_values['image_bytes'] = BytesIO(request.data)
+    except:
+        log.log_error('Unable to load the request data')   # Log to Application Insights
+    return return_values
 
-# POST, sync API endpoint example
-@app.route(api_prefix + '/classify', methods=['POST'])
-def post():
-    if not request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
-        return abort(415, "Unable to process request. Only png or jpeg files are accepted as input")
-
-    image = BytesIO(request.data)
-    return ai4e_wrapper.wrap_sync_endpoint(classify, "post:classify", image_bytes=image)
-
-def classify(**kwargs):
-    print('runserver.py: classify() called...')
-    image_bytes = kwargs.get('image_bytes', None)
-
+# POST, async API endpoint example
+@ai4e_service.api_sync_func(
+    api_path = '/classify', 
+    methods = ['POST'], 
+    request_processing_function = process_request_data, # This is the data process function that you created above.
+    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    content_types = ACCEPTED_CONTENT_TYPES,
+    content_max_length = 10000, # In bytes
+    trace_name = 'post:classify')
+def post(*args, **kwargs):
+    print('Post called')
+    image_bytes = kwargs.get('image_bytes')
     clss = pytorch_classifier.classify(model, image_bytes)
-
     # in this example we simply return the numerical ID of the most likely category determined
     # by the model
     return clss
-
-
-# GET, sync API endpoint example
-@app.route(api_prefix + '/echo/<string:text>', methods=['GET'])
-def echo(text):
-    # wrap_sync_endpoint wraps your function within a logging trace.
-    return ai4e_wrapper.wrap_sync_endpoint(my_sync_function, "GET:echo", echo_text=text)
-
-def my_sync_function(**kwargs):
-    echo_text = kwargs.get('echo_text', '')
-    return 'Echo: ' + echo_text
 
 if __name__ == '__main__':
     app.run()

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/blob-python:latest
+FROM mcr.microsoft.com/aiforearth/blob-py:latest
 
 # Copy blob connection information
 COPY ./blob_mount.json /app/fuse/blob_mount.json
@@ -12,6 +12,8 @@ COPY ./supervisord.conf /etc/supervisord.conf
 # startup.sh is a helper script
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
+
+ENV API_PREFIX=/v1/blob
 
 # Expose the port that is to be used when calling your API
 EXPOSE 80
