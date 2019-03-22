@@ -74,7 +74,7 @@ def default_post(*args, **kwargs):
     ai4e_service.api_task_manager.CompleteTask(taskId, 'completed')
 
 # GET, sync API endpoint example
-@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'post:echo', kwargs = {'text'})
+@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'get:echo', kwargs = {'text'})
 def echo(*args, **kwargs):
     return 'Echo: ' + kwargs['text']
 

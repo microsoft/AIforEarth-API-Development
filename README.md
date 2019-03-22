@@ -76,7 +76,7 @@ If you are unfamiliar with Docker or container technologies, we encourage you to
 Dockerfile walkthrough:
 
 ```Dockerfile 
-FROM ai4eregistry.azurecr.io/1.0-base-py-ubuntu16.04:latest
+FROM mcr.microsoft.com/aiforearth/base-py:latest
 ```
 - The very first line of our Dockerfile describes the base image, upon which we'll build our API service environment. In general, you may use any base image you would like, but if you wish to be considered as an AI For Earth API, you must use one of the official AI for Earth base images.  If you find that the provided base images are not sufficient, please connect with us so we may expand our offerings.
 ```Dockerfile 
@@ -111,6 +111,11 @@ ENV SERVICE_MODEL_VERSION "1.0"
 ```
 - All logging and metric collection flows through Application Insights. Set the APPINSIGHTS_INSTRUMENTATIONKEY environment variable to your instrumentation key. This is required when offering an official AI for Earth API, but is highly suggested otherwise. If you wish not to use Application Insights, you can safely remove this line.  All of the SERVICE_ prefixed environment variables offer logging filters within Application Insights.
 
+```Dockerfile
+HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
+  CMD curl -f http://localhost/ || exit 1
+```
+- The HEALTHCHECK will make a request to the / endpoint to ensure that the service is running. This is used by Docker to determine if the service is healthy.
 
 ```Dockerfile
 EXPOSE 80
@@ -118,6 +123,11 @@ ENTRYPOINT [ "/startup.sh" ]
 ```
 - Expose the port that you wish to use to call your API.
 - Specify the entrypoint, or the file to execute when starting the container.
+
+```Dockerfile
+ENV API_PREFIX=/v1/my_api/tasker
+```
+- Add a  URL prefix that your API will use.
 
 ### [supervisor.conf](./examples/base-py/supervisor.conf)
 The supervisor.conf file contains a number of lines, but there are two that are important to execute your API service code.
@@ -144,53 +154,93 @@ Next, we look at the "command" specification.  This is a single line, but we'll 
 ### [runserver.py](./examples/base-py/my_api/runserver.py)
 This is an example entrypoint to an API service. We explore the important lines, below:
 ```Python
-from ai4e_api_tools.task_management.api_task import ApiTaskManager
+from ai4e_service import AI4EService
 ```
-- The AI for Earth api toolset contains a task manager for use in long-running/async APIs services. The task manager stores state within the container, itself. Therefore, it is not a production-ready task manager. The task manager has been designed, however, to be directly pluggable into AI for Earth's distributed task manager. If you are designing your API for eventual adoption into the AI for Earth official APIs, utilizing this task manager will allow you to test your API and allow you to migrate to the AI for Earth distributed architecure without any code changes.
+- The AI for Earth api toolset contains service (AI4EService) wrapper that includes:
+    - A task manager for use in long-running/async APIs services. The task manager stores state within the container, itself. Therefore, it is not a production-ready task manager. The task manager has been designed, however, to be directly pluggable into AI for Earth's distributed task manager. If you are designing your API for eventual adoption into the AI for Earth official APIs, utilizing this task manager will allow you to test your API and allow you to migrate to the AI for Earth distributed architecure without any code changes.
+    - An integrated health check endpoint for Docker to determine the health of the service.
+    - A request validation function that is called on each request, before your code is called. This function checks to ensure that the service is not being terminated, that the max connections has not been reached, that the content type in the request is expected, and that the request size doesn't exceed the max request size. If any of these conditions are discovered, a 503 will be sent to the caller.
+    - Two aspect-oriented function wrappers: async and sync, which, when applied to your function, turns the function into a callable API.
 
 ```Python
-from ai4e_api_tools.ai4e_app_insights import AppInsights
+from ai4e_app_insights_wrapper import AI4EAppInsights
 ```
 - We have built a wrapper around the Application Insights Python API that allows us to quickly adopt your APIs into our offical API platform (without any code changes). If you wish to explore this option, please use this wrapper.
 
 ```Python
-my_api_prefix = "/v1/my_api/tasker"
-api_task_manager = ApiTaskManager(flask_api=api, resource_prefix=my_api_prefix)
+log = AI4EAppInsights()
 ```
-- Creates the task manager, using the API path that is specified in my_api_prefix.
+- Initialize the AI for Earth Application Insights class, which you will use to send log messages to Application Insights.
 
 ```Python
-appinsights = AppInsights(app)
+with app.app_context():
+    ai4e_service = AI4EService(app, log)
 ```
-- Initialize the AI for Earth Application Insights class, which logs requests, traces and exceptions to your Application Insights service instance.
+- Creates the AI4EService, which we defined above.
 
 ```Python
-def post(self, msg=""):
-    # Create a new long-running API task and set its status to 'queued'
-    taskId = api_task_manager.AddTask('queued')
-    # Log message to Application Insights
-    app.logger.info('Queued task: ' + taskId)
-
-    # Since we want to return the task information, create a thread to run the service code.
-    thread = Thread(target = self.funct, args=(taskId))
-    thread.start()
-    return 'Starting task: ' + str(taskId)
+def process_request_data(request):
+    return_values = {'data': None}
+    try:
+        # Attempt to load the body
+        return_values['data'] = request.data
+    except:
+        log.log_error('Unable to load the request data')   # Log to Application Insights
+    return return_values
 ```
-- Set up a POST endpoint for your API.
+- This is a request data processing function, which is run before your model code. Use this function to validate any input and to assign the input data to a dictionary.
 
 ```Python
-def funct(self, taskId):
-    api_task_manager.UpdateTaskStatus(taskId, 'started')
+def run_model(taskId, body):
+    # Update the task status, so the caller knows it has been accepted and is running.
+    ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'running model')
+
+    log.log_debug('Running model', taskId) # Log to Application Insights
+    #INSERT_YOUR_MODEL_CALL_HERE
     sleep(10)  # replace with real code
-    api_task_manager.UpdateTaskStatus(taskId, 'completed')
-    app.logger.info('Completed task: ' + taskId)
 ```
 - This is the method that actually runs your service code. Notice that we wrap the "real code" section with status updates. This allows the user to request status updates from the task GET endpoint - included via AI for Earth task management.
 
 ```Python
-api.add_resource(Tasker, my_api_prefix)
+@ai4e_service.api_async_func(
+    api_path = '/', 
+    methods = ['POST'], 
+    request_processing_function = process_request_data, # This is the data process function that you created above.
+    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    content_types = ['application/json'],
+    content_max_length = 1000, # In bytes
+    trace_name = 'post:my_long_running_funct')
+def default_post(*args, **kwargs):
+    # Since this is an async function, we need to keep the task updated.
+    taskId = kwargs.get('taskId')
+    log.log_debug('Started task', taskId) # Log to Application Insights
+
+    # Get the data from the dictionary key that you assigned in your process_request_data function.
+    request_data = kwargs.get('data')
+
+    if not request_data:
+        ai4e_service.api_task_manager.FailTask(taskId, 'Task failed - Body was empty or could not be parsed.')
+        return -1
+
+    # Load the request data into JSON format.
+    request_json = json.loads(request_data)
+
+    # Run your model function
+    run_model(taskId, request_json)
+
+    # Once complete, ensure the status is updated.
+    log.log_debug('Completed task', taskId) # Log to Application Insights
+    # Update the task with a completion event.
+    ai4e_service.api_task_manager.CompleteTask(taskId, 'completed')
 ```
-- Maps the Tasker class as the API service class. Modify this prefix, when you want to change your endpoint prefix.
+- Set up a POST, long-running, endpoint for your API. 
+
+```Python
+@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'get:echo', kwargs = {'text'})
+def echo(*args, **kwargs):
+    return 'Echo: ' + kwargs['text']
+```
+- Set up a GET, sync endpoint.
 
 ## Step 3: Run a service locally
 Now that you have your container code completed, we can build your container and run it locally.
