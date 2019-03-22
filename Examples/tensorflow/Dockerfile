@@ -1,5 +1,5 @@
 # Pull in the AI for Earth Base Image, so we can extract necessary libraries.
-FROM mcr.microsoft.com/aiforearth/base-py:latest as ai4e_base
+FROM ai4eregistry.azurecr.io/aiforearth/base-py:1.3 as ai4e_base
 
 # Use any compatible Ubuntu-based image as your selected base image.
 FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
@@ -68,3 +68,7 @@ EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
 ENTRYPOINT [ "/startup.sh" ]
+# Use the following entrypoint to debug bridge issues.
+#ENTRYPOINT ["uwsgi", "--chdir", "/app/tf_iNat_api/", "--virtualenv", "/usr/local/envs/ai4e_py_api", "--http", "0.0.0.0:80", "--callable", "app", "--enable-threads", "--wsgi-file", "/app/tf_iNat_api/runserver.py", "--wsgi-disable-file-wrapper"]
+
+       

@@ -3,6 +3,7 @@
 from flask import Flask, request
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import AI4EService
+from sas_blob import SasBlob
 from PIL import Image
 import tf_detector
 from io import BytesIO
@@ -54,6 +55,7 @@ def process_request_data(request):
 def detect(*args, **kwargs):
     print('runserver.py: detect() called, generating detections...')
     image_bytes = kwargs.get('image_bytes')
+    taskId = kwargs.get('taskId')
 
     # Update the task status, so the caller knows it has been accepted and is running.
     ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'running - generate_detections')

@@ -32,6 +32,7 @@ model = pytorch_classifier.load_model(model_path)
 # Define a function for processing request data, if appliciable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
 def process_request_data(request):
+    print('Processing data...')
     return_values = {'image_bytes': None}
     try:
         # Attempt to load the body
@@ -49,8 +50,8 @@ def process_request_data(request):
     content_types = ACCEPTED_CONTENT_TYPES,
     content_max_length = 10000, # In bytes
     trace_name = 'post:classify')
-@app.route(api_prefix + '/classify', methods=['POST'])
 def post(*args, **kwargs):
+    print('Post called')
     image_bytes = kwargs.get('image_bytes')
     clss = pytorch_classifier.classify(model, image_bytes)
     # in this example we simply return the numerical ID of the most likely category determined

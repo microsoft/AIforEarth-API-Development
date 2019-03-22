@@ -19,6 +19,11 @@ blob_mapped_dir = "/mnt/input"
 # Use the AI4EAppInsights library to send log messages.
 log = AI4EAppInsights()
 
+# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# handles SIGTERM signals from AKS, etc., and handles concurrent requests.
+with app.app_context():
+    ai4e_service = AI4EService(app, log)
+
 # Define a function for processing request data, if appliciable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
 def process_request_data(request):
@@ -36,20 +41,20 @@ def process_request_data(request):
     methods = ['POST'], 
     maximum_concurrent_requests = 10, # If the number of requests exceed this limit, a 503 is returned to the caller.
     trace_name = 'post:read_blob_file')
-def post():
+def post(*args, **kwargs):
     # The AddTask function returns a dictonary of task information:
     #   - uuid: taskId used to update/retrieve task status
     #   - status: string that was passed via the AddTask or UpdateTaskStatus function
     #   - timestamp
     #   - endpoint: passed via the ApiTaskManager constructor
 
-    try:
-        filename = "config.csv"
-        data_path = os.path.join(blob_mapped_dir, filename)
-        with open(data_path, "r") as file_from_blob:
-                "Blob file contents: " + file_from_blob.read()
-    except:
-        return "Unable to parse the request body. Please request with valid json."
+    #try:
+    filename = "config.csv"
+    data_path = os.path.join(blob_mapped_dir, filename)
+    with open(data_path, "r") as file_from_blob:
+        return "Blob file contents: " + file_from_blob.read()
+    #except:
+    #    return "Unable to parse the request body. Please request with valid json."
 
 if __name__ == '__main__':
     app.run()

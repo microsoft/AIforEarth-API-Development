@@ -92,16 +92,20 @@ class AI4EService():
     def before_request(self):
         # Don't accept a request if SIGTERM has been called on this instance.
         if (self.is_terminating):
+            print('Process is being terminated. Request has been denied.')
             abort(503, {'message': 'Service is busy, please try again later.'})
 
         if request.path in self.func_properties:
             if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
+                print('Service is busy. Request has been denied.')
                 abort(503, {'message': 'Service is busy, please try again later.'})
 
             if (self.func_properties[request.path][CONTENT_TYPE_KEY_NAME] and not request.content_type in self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]):
+                print('Invalid content type. Request has been denied.')
                 abort(401, {'message': 'Content-type must be ' + self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]})
 
             if (self.func_properties[request.path][CONTENT_MAX_KEY_NAME] and request.content_length > self.func_properties[request.path][CONTENT_MAX_KEY_NAME]):
+                print('Request is too large. Request has been denied.')
                 abort(413, {'message': 'Request content too large (' + str(request.content_length) + "). Must be smaller than: " + str(self.func_properties[request.path][CONTENT_MAX_KEY_NAME])})
 
     def increment_requests(self, api_path):
