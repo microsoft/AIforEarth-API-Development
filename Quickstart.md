@@ -19,14 +19,15 @@ Use a descriptive resource group name, such as "ai4e_yourname_app_group". For re
   2. [Insert code to call your model](#Insert-code-to-call-your-model)
   3. [Input handling](#Input-handling)
   4. [Output handling](#Output-handling)
-  5. [Create AppInsights instrumentation keys](#Create-AppInsights-instrumentation-keys)
-  6. [Install required packages](#Install-required-packages)
-  7. [Set environment variables](#Set-environment-variables)
-  8. [Build and run your image](#Build-and-run-your-image)
-  9. [Make requests](#Make-requests)
-  10. [Publish to Azure Container Registry](#Publish-to-Azure-Container-Registry)
-  11. [Run your container in ACI](#Run-your-container-in-ACI)
-  12. [FAQs](#FAQs)
+  5. [Function decorator detail](#Function-decorator-detail)
+  6. [Create AppInsights instrumentation keys](#Create-AppInsights-instrumentation-keys)
+  7. [Install required packages](#Install-required-packages)
+  8. [Set environment variables](#Set-environment-variables)
+  9. [Build and run your image](#Build-and-run-your-image)
+  10. [Make requests](#Make-requests)
+  11. [Publish to Azure Container Registry](#Publish-to-Azure-Container-Registry)
+  12. [Run your container in ACI](#Run-your-container-in-ACI)
+  13. [FAQs](#FAQs)
 
 
 ## Machine Setup
@@ -98,7 +99,6 @@ We have provided several examples that leverage these base images to make it eas
 - **base-py:** Start with this example if you are using Python and don't need Azure blob storage integration, and none of the below more specific examples are a good fit.  It contains both synchronous and asynchronous endpoints.  It is a great example to use for asynchronous, long-running API calls.  
 - **base-r:** Start with this example if you are using R.  
 - **blob-mount-py:** Start with this example if you are using Python and you need Azure blob storage integration.  
-- **customvision-sample:** This example is a modification of the base-py example, using a synchronous API call to call a Custom Vision model.  It is a great example to use if you are using a Custom Vision model or if you are making a synchronous API call.  
 - **pytorch:** This example is a modification of the base-py example, using a synchronous API call to call a PyTorch model.  It is a great example to use if you are using PyTorch or if you are making a synchronous API call.  
 - **tensorflow:** This example is a modification of the base-py example, using an asynchronous API call to call a TensorFlow model.  It is a great example to use if you are using TensorFlow or if you are making an asynchronous API call.  
 
@@ -106,8 +106,6 @@ After you've chosen the example that best fits your scenario, make a copy of tha
 
 ## Insert code to call your model
 Next, in your new working directory, we need to update the example that you chose with code to call your specific model.  This should be done in the runserver.py file (if you are using a Python example) or the api_example.R file (if you are using an R example) in the my_api (or similarly named) subfolder.  
-
-All examples contain the text "#INSERT_YOUR_MODEL_CALL_HERE".  This is intended to be a starting point to quickly get your API running with your model.  Simply adding your model will not perform necessary input checking, error handling, etc.  We strongly recommend that you implement these best practices as well.  
 
 ## Input handling
 Your model has inputs and outputs.  For example, let's consider a classification model that takes an image and classifies its contents as one of multiple species of animal.  The input that you need to provide to this model is an image, and the output that you provide may be JSON-formatted text of the classifications and their confidence.  
@@ -119,9 +117,9 @@ For GET operations, best practice dictates that a noun is used in the URL in the
 
 ##### Python and Flask
 ```Python
-@app.route(my_api_prefix + '/echo/<string:text>', methods=['GET'])
-def echo(text):
-    print(text)
+@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'get:echo', kwargs = {'text'})
+def echo(*args, **kwargs):
+    return 'Echo: ' + kwargs['text']
 ```
 ##### R and Plumber
 ```R
@@ -217,6 +215,22 @@ if request.headers.get("Content-Type") in ACCEPTED_CONTENT_TYPES:
     prediction_stream.seek(0)
     return send_file(prediction_stream)
 ```
+## Function decorator detail
+We use function decorators to create APIs out of your functions, such as those that execute a model. Here, we will detail the two decorators and their parameters.
+
+There are two decorators:
+- ```@ai4e_service.api_async_func```, which wraps the function as an async/long-running API.
+- ```@ai4e_service.api_sync_func```, which wraps the function as a sync API that returns right away.
+
+Each decorator contains the following parameters:
+- ```api_path = '/'```: Specifies the endpoint of the API. This comes after the API_PREFIX value in the Dockerfile. For example, if the Dockerfile entry is ```ENV API_PREFIX=/v1/my_api/tasker``` and the api_path is as it is specified here, the complete endpoint of your API will be http://localhost:80/v1/my_api/tasker/
+- ```methods = ['POST']```: Specifies the methods accepted by the API.
+- ```request_processing_function = process_request_data```: Specifies the function to call before your endpoint function is called. This function will pre-process the request data and is located in your code. To work with request data, you must assign and return the request data as part of a dictionary that will be extracted later in your model function.
+- ```maximum_concurrent_requests = 5```: If the number of requests exceed this limit, a 503 is returned to the caller.
+- ```content_types = ['application/json']```: An array of accepted content types. If the requested type is not found in the array, a 503 will be returned.
+- ```content_max_length = 1000```: The maximum length of the request data (in bytes) permitted. If the length of the data exceeds this setting, a 503 will be returned.
+-```trace_name = 'post:my_long_running_funct'```: A trace name to associate with this function. This allows you to search logs and metrics for this particular function.
+
 ## Create AppInsights instrumentation keys
 [Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and an API key to use in your application.
 
