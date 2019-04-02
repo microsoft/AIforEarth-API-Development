@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 from threading import Thread
 from os import getenv
-from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.exporters.ocagent import trace_exporter
 from opencensus.trace.exporters.transports.background_thread import BackgroundThreadTransport
