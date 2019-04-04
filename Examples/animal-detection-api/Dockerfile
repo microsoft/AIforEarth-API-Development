@@ -24,14 +24,14 @@ RUN /usr/local/envs/ai4e_py_api/bin/pip install --upgrade pip
 RUN /usr/local/envs/ai4e_py_api/bin/pip install tensorflow==1.9 pillow requests_toolbelt
 
 # Note: supervisor.conf reflects the location and name of your api code.
-# Copy your API code
-COPY ./animal-detector /app/animal-detector/
 COPY ./supervisord.conf /etc/supervisord.conf
 # startup.sh is a helper script
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
 
 COPY ./LocalForwarder.config /lf/
+# Copy your API code
+COPY ./animal-detector /app/animal-detector/
 
 # Application Insights keys and trace configuration
 ENV APPINSIGHTS_INSTRUMENTATIONKEY= \
@@ -66,7 +66,7 @@ ENV GPU_BATCH_SIZE=8
 ENV DEFAULT_DETECTION_CONFIDENCE=0.9
 
 # Expose the port that is to be used when calling your API
-EXPOSE 80
+EXPOSE 1212
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
 ENTRYPOINT [ "/startup.sh" ]

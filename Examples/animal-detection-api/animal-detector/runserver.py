@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 # # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
-from time import sleep
 import json
 from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
@@ -19,7 +18,7 @@ app = Flask(__name__)
 # Use the AI4EAppInsights library to send log messages. NOT REQURIED
 log = AI4EAppInsights()
 
-# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# Use the AI4EService to execute your functions within a logging trace, which supports long-running/async functions,
 # handles SIGTERM signals from AKS, etc., and handles concurrent requests.
 with app.app_context():
     ai4e_service = AI4EService(app, log)
@@ -35,7 +34,6 @@ def convert_numpy_floats(np_array):
 # Define a function for processing request data, if appliciable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
 def process_request_data(request):
-    data = request.data
     return_values = {'detection_confidence': float(getenv('DEFAULT_DETECTION_CONFIDENCE'))}
     try:
         # Attempt to load the files
