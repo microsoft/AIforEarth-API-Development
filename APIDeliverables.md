@@ -1,6 +1,6 @@
 # AI for Earth - API Deliverables
 
-Select AI for Earth grant recipients are being funded to provide AI for Earth APIs.  If you are providing an API, here are the specific deliverables to submit:
+Select AI for Earth grant recipients are contributing AI for Earth APIs.  If you are providing an API, here are the specific deliverables to submit:
 
 + [Container with machine learning model](#container)
 + [Jupyter notebook (for demo suite)](#notebook)
