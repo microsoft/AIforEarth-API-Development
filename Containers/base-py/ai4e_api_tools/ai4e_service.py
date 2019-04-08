@@ -83,7 +83,7 @@ class AI4EService():
         is_async = False
         return self.api_func(is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types, content_max_length, trace_name, *args, **kwargs)
 
-    def initialize_term(signum, frame):
+    def initialize_term(self, signum, frame):
         print('Signal handler called with signal: ' + signum)
         print('SIGINT received, service is terminating and will no longer accept requests.')
         self.is_terminating = True

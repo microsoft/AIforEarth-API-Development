@@ -14,7 +14,7 @@ class ApiTaskManager:
     def GetTaskId(self):
         id = str(random.randint(1, 10000))
         while id in self.status_dict:
-            id = random.randint(1, 10000)
+            id = str(random.randint(1, 10000))
         return id
 
     def AddTask(self, request):
