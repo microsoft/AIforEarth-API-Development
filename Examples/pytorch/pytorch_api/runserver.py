@@ -4,7 +4,7 @@ from flask import Flask, request, abort
 from flask_restful import Resource, Api
 from ai4e_app_insights import AppInsights
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EService
+from ai4e_service import APIService
 from PIL import Image
 import pytorch_classifier
 from io import BytesIO
@@ -19,10 +19,10 @@ app = Flask(__name__)
 # Use the AI4EAppInsights library to send log messages.
 log = AI4EAppInsights()
 
-# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# Use the APIService to executes your functions within a logging trace, supports long-running/async functions,
 # handles SIGTERM signals from AKS, etc., and handles concurrent requests.
 with app.app_context():
-    ai4e_service = AI4EService(app, log)
+    ai4e_service = APIService(app, log)
 
 # Load the model
 # The model was copied to this location when the container was built; see ../Dockerfile

@@ -5,11 +5,11 @@ from os import getenv
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.exporters.ocagent import trace_exporter
 from opencensus.trace.exporters.transports.background_thread import BackgroundThreadTransport
-from flask import Flask, abort, request, current_app
+from flask import Flask, abort, request, current_app, views
 from flask_restful import Resource, Api
 import signal
 from ai4e_app_insights import AppInsights
-from task_management.api_task import ApiTaskManager
+from task_management.api_task import TaskManager
 import sys
 from functools import wraps
 
@@ -24,7 +24,20 @@ MAX_REQUESTS_KEY_NAME = 'max_requests'
 CONTENT_TYPE_KEY_NAME = 'content_type'
 CONTENT_MAX_KEY_NAME = 'content_max_length'
 
-class AI4EService():
+class Task(Resource):
+    def __init__(self, **kwargs):
+        self.task_mgr = kwargs['task_manager']
+
+    def get(self, id):
+        st = self.task_mgr.GetTaskStatus(str(id))
+        ret = {}
+        ret['uuid'] = id
+        ret['status'] = st[0]
+        ret['timestamp'] = st[1]
+        ret['endpoint'] = "uri"
+        return(ret)
+
+class APIService():
     def __init__(self, flask_app, logger):
         self.app = flask_app
         self.log = logger
@@ -35,15 +48,22 @@ class AI4EService():
         self.func_request_counts = {}
         self.api_prefix = getenv('API_PREFIX')
         
-        self.api_task_manager = ApiTaskManager(flask_api=self.api, resource_prefix=self.api_prefix)
+        self.api_task_manager = TaskManager()
         signal.signal(signal.SIGINT, self.initialize_term)
 
-        self.app.add_url_rule('/', view_func = self.health_check, methods=['GET'])
+        # Add health check endpoint
+        self.app.add_url_rule(self.api_prefix + '/', view_func = self.health_check, methods=['GET'])
+        print("Adding url rule: " + self.api_prefix + '/')
+        # Add task endpoint
+        self.api.add_resource(Task, self.api_prefix + '/task/<int:id>', resource_class_kwargs={ 'task_manager': self.api_task_manager })
+        print("Adding url rule: " + self.api_prefix + '/task/<int:taskId>')
+
         self.app.before_request(self.before_request)
 
     def health_check(self):
+        print("Health check call successful.")
         return 'Health check OK'
-    
+
     def api_func(self, is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types = None, content_max_length = None, trace_name = None, *args, **kwargs):
         def decorator_api_func(func):
             if not api_path in self.func_properties:
