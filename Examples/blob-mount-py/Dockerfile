@@ -16,5 +16,5 @@ RUN chmod +x /startup.sh
 ENV API_PREFIX=/v1/blob
 
 # Expose the port that is to be used when calling your API
-EXPOSE 80
+EXPOSE 1212
 ENTRYPOINT [ "/startup.sh" ]

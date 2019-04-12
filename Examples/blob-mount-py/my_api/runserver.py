@@ -6,7 +6,7 @@ from flask import Flask, request
 from time import sleep
 import json
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EService
+from ai4e_service import APIService
 import sys
 import os
 from os import getenv
@@ -19,10 +19,10 @@ blob_mapped_dir = "/mnt/input"
 # Use the AI4EAppInsights library to send log messages.
 log = AI4EAppInsights()
 
-# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# Use the APIService to executes your functions within a logging trace, supports long-running/async functions,
 # handles SIGTERM signals from AKS, etc., and handles concurrent requests.
 with app.app_context():
-    ai4e_service = AI4EService(app, log)
+    ai4e_service = APIService(app, log)
 
 # Define a function for processing request data, if appliciable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
@@ -37,7 +37,7 @@ def process_request_data(request):
 
 # POST, long-running/async API endpoint example
 @ai4e_service.api_sync_func(
-    api_path = '/', 
+    api_path = '/example', 
     methods = ['POST'], 
     maximum_concurrent_requests = 10, # If the number of requests exceed this limit, a 503 is returned to the caller.
     trace_name = 'post:read_blob_file')
@@ -46,7 +46,7 @@ def post(*args, **kwargs):
     #   - uuid: taskId used to update/retrieve task status
     #   - status: string that was passed via the AddTask or UpdateTaskStatus function
     #   - timestamp
-    #   - endpoint: passed via the ApiTaskManager constructor
+    #   - endpoint: passed via the TaskManager constructor
 
     #try:
     filename = "config.csv"

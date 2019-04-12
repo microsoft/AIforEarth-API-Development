@@ -1,14 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import random, datetime
-from flask_restful import Resource
 
-print("Creating API task manager.")
+print("Creating task manager.")
 
-class ApiTaskManager:
-    def __init__(self, flask_api, resource_prefix = ""):
-        self.resource_pfx = resource_prefix
-        flask_api.add_resource(Task, self.resource_pfx + '/task/<int:id>', resource_class_kwargs={ 'task_manager': self })
+class TaskManager:
+    def __init__(self):
         self.status_dict = {}
 
     def GetTaskId(self):
@@ -19,7 +16,7 @@ class ApiTaskManager:
 
     def AddTask(self, request):
         id = self.GetTaskId()        
-        self.status_dict[id] = ('created', datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"), self.resource_pfx)
+        self.status_dict[id] = ('created', datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"), 'task')
 
         ret = {}
         ret['uuid'] = id
@@ -51,16 +48,3 @@ class ApiTaskManager:
             return self.status_dict[taskId]
         else:
             return "not found"
-
-class Task(Resource):
-    def __init__(self, **kwargs):
-        self.task_mgr = kwargs['task_manager']
-
-    def get(self, id):
-        st = self.task_mgr.GetTaskStatus(str(id))
-        ret = {}
-        ret['uuid'] = id
-        ret['status'] = st[0]
-        ret['timestamp'] = st[1]
-        ret['endpoint'] = "uri"
-        return(ret)

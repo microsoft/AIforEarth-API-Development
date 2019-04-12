@@ -6,7 +6,7 @@ from time import sleep
 import json
 from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EService
+from ai4e_service import APIService
 from os import getenv
 
 print('Creating Application')
@@ -16,10 +16,10 @@ app = Flask(__name__)
 # Use the AI4EAppInsights library to send log messages. NOT REQURIED
 log = AI4EAppInsights()
 
-# Use the AI4EService to executes your functions within a logging trace, supports long-running/async functions,
+# Use the APIService to executes your functions within a logging trace, supports long-running/async functions,
 # handles SIGTERM signals from AKS, etc., and handles concurrent requests.
 with app.app_context():
-    ai4e_service = AI4EService(app, log)
+    ai4e_service = APIService(app, log)
 
 # Define a function for processing request data, if appliciable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
@@ -43,7 +43,7 @@ def run_model(taskId, body):
 
 # POST, long-running/async API endpoint example
 @ai4e_service.api_async_func(
-    api_path = '/', 
+    api_path = '/example', 
     methods = ['POST'], 
     request_processing_function = process_request_data, # This is the data process function that you created above.
     maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.

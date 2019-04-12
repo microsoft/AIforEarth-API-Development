@@ -37,5 +37,5 @@ ENV API_PREFIX=/v1/pytorch_api
 # Expose the port that is to be used when calling your API
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
-  CMD curl -f http://localhost/ || exit 1
+  CMD curl -f http://localhost/${API_PREFIX}/  || exit 1
 ENTRYPOINT [ "/startup.sh" ]

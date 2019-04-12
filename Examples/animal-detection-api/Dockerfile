@@ -68,5 +68,5 @@ ENV DEFAULT_DETECTION_CONFIDENCE=0.9
 # Expose the port that is to be used when calling your API
 EXPOSE 1212
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
-  CMD curl -f http://localhost/ || exit 1
+  CMD curl -f http://localhost:1212/${API_PREFIX}/  || exit 1
 ENTRYPOINT [ "/startup.sh" ]

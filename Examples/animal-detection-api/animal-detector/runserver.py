@@ -5,7 +5,7 @@
 import json
 from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
-from ai4e_service import AI4EService
+from ai4e_service import APIService
 from os import getenv
 from datetime import datetime
 
@@ -18,10 +18,10 @@ app = Flask(__name__)
 # Use the AI4EAppInsights library to send log messages. NOT REQURIED
 log = AI4EAppInsights()
 
-# Use the AI4EService to execute your functions within a logging trace, which supports long-running/async functions,
+# Use the APIService to execute your functions within a logging trace, which supports long-running/async functions,
 # handles SIGTERM signals from AKS, etc., and handles concurrent requests.
 with app.app_context():
-    ai4e_service = AI4EService(app, log)
+    ai4e_service = APIService(app, log)
 
 detector = TFDetector(getenv('MODEL_PATH'))
 
