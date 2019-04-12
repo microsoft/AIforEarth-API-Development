@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/base-py:latest
+FROM 'basetest'
 
 # Example of installing additonal Anaconda packages - numpy and pandas
 RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
