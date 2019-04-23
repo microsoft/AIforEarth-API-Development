@@ -1,6 +1,17 @@
 # AI for Earth - Creating APIs
 These images and examples are meant to illustrate how to build containers for use in the AI for Earth API system.
 
+## Notice
+Additional to a running docker environment, GPU images require [NVIDIA Docker](https://github.com/nvidia/nvidia-docker) package to support CUDA.
+
+### CUDA Toolkit
+
+To view the license for the CUDA Toolkit included in the cuda base image, click [here](http://docs.nvidia.com/cuda/eula/index.html)
+
+### CUDA Deep Neural Network library (cuDNN)
+
+To view the license for cuDNN included in the cuda base image, click [here](https://developer.nvidia.com/cudnn/license_agreement)
+
 ## Contents
 1. [Repo Layout](#repo-layout)
 2. [Quickstart](#Quickstart)
