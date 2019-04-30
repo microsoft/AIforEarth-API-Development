@@ -48,13 +48,10 @@ def post(*args, **kwargs):
     #   - timestamp
     #   - endpoint: passed via the TaskManager constructor
 
-    #try:
     filename = "config.csv"
     data_path = os.path.join(blob_mapped_dir, filename)
     with open(data_path, "r") as file_from_blob:
         return "Blob file contents: " + file_from_blob.read()
-    #except:
-    #    return "Unable to parse the request body. Please request with valid json."
 
 if __name__ == '__main__':
     app.run()
