@@ -1,6 +1,4 @@
-#mcr.microsoft.com/aiforearth/blob-py:version
-#FROM mcr.microsoft.com/aiforearth/base-py:latest
-FROM ai4eregistry.azurecr.io/aiforearth/blob-py:1.3
+FROM mcr.microsoft.com/aiforearth/base-py:1.4
 #############################################################################################
 # Add support for mounting an Azure blob
 # Add the Microsoft package repository and install blobfuse
