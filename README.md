@@ -176,7 +176,7 @@ from ai4e_service import AI4EService
 ```Python
 from ai4e_app_insights_wrapper import AI4EAppInsights
 ```
-- We have built a wrapper around the Application Insights Python API that allows us to quickly adopt your APIs into our offical API platform (without any code changes). If you wish to explore this option, please use this wrapper.
+- We have built a wrapper around the Application Insights Python API that allows us to quickly adopt your APIs into our official API platform (without any code changes). If you wish to explore this option, please use this wrapper.
 
 ```Python
 log = AI4EAppInsights()
