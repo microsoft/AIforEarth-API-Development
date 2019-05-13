@@ -71,7 +71,7 @@ class AadBlob:
 
     def save_local_blob(self, container, blob, local_file):
         print("{} for {}/{}".format('save_local_blob', container, blob))
-        blob_bytes = self.get_blob_to_bytes(container, blob, max_connections=100, timeout=600, progress_callback=self.callback)
+        blob_bytes = self.get_blob_to_bytes(container, blob)
         f = open(local_file, 'wb')
         f.write(blob_bytes)
         f.close()

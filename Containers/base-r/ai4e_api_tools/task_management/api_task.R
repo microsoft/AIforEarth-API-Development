@@ -53,9 +53,11 @@ UpdateTaskStatus<-function(taskId, status){
 
 CompleteTask<-function(taskId, status){
   UpdateTaskStatus(taskId, status)
+}
 
 FailTask<-function(taskId, status){
   UpdateTaskStatus(taskId, status)
+}
 
 AddPipelineTask<-function(taskId, organization_moniker, version, api_name, body) {
     next_url = paste(organization_moniker, version, api_name, sep = "/")
