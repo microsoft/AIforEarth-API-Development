@@ -44,7 +44,10 @@ class TaskManager:
         self.UpdateTaskStatus(taskId, status)
 
     def GetTaskStatus(self, taskId):
-        if taskId in self.status_dict:
-            return self.status_dict[taskId]
-        else:
-            return "not found"
+        try:
+            if taskId in self.status_dict:
+                return self.status_dict[taskId]
+            else:
+                return "not found"
+        except:
+            print(sys.exc_info()[0])

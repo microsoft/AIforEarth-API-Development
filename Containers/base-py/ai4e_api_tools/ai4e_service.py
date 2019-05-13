@@ -12,6 +12,7 @@ from ai4e_app_insights import AppInsights
 from task_management.api_task import TaskManager
 import sys
 from functools import wraps
+from werkzeug.exceptions import HTTPException
 
 # Use OpenCensus to send traces to Application Insights
 export_LocalForwarder = trace_exporter.TraceExporter(
@@ -152,6 +153,17 @@ class APIService():
         thread = Thread(target = self._execute_func_with_counter, args=args, kwargs=kwargs)
         thread.start()
 
+    def _log_and_fail_exeception(self, **kwargs):
+        if ('taskId' in kwargs):
+            taskId = kwargs['taskId']
+            if taskId:
+                self.log.log_exception(sys.exc_info()[0], taskId)
+                self.api_task_manager.FailTask(taskId, 'Task failed - try again')
+            else:
+                self.log.log_exception(sys.exc_info()[0])
+        else:
+            self.log.log_exception(sys.exc_info()[0])
+
     def _execute_func_with_counter(self, *args, **kwargs):
         func = kwargs['func']
         api_path = kwargs['api_path']
@@ -160,13 +172,12 @@ class APIService():
         try:
             r = func(*args, **kwargs)
             return r
+        except HTTPException as e:
+            self._log_and_fail_exeception(**kwargs)
+            return e
         except:
-            taskId = kwargs['taskId']
-            if taskId:
-                self.log.log_exception(sys.exc_info()[0], taskId)
-                self.api_task_manager.FailTask(taskId, 'Task failed - try again')
-            else:
-                self.log.log_exception(sys.exc_info()[0])
+            print(sys.exc_info()[0])
+            self._log_and_fail_exeception(**kwargs)
             abort(500)
         finally:
             self.decrement_requests(api_path)
