@@ -7,7 +7,6 @@ import json
 from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import APIService
-from os import getenv
 
 print('Creating Application')
 
@@ -21,7 +20,7 @@ log = AI4EAppInsights()
 with app.app_context():
     ai4e_service = APIService(app, log)
 
-# Define a function for processing request data, if appliciable.  This function loads data or files into
+# Define a function for processing request data, if applicable.  This function loads data or files into
 # a dictionary for access in your API function.  We pass this function as a parameter to your API setup.
 def process_request_data(request):
     return_values = {'data': None}

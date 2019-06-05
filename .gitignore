@@ -328,4 +328,11 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
 Notebooks/.ipynb_checkpoints/template-demo-checkpoint.ipynb
+
+# Mac file system
+.DS_Store
+
+# Jupyter notebook
+.ipynb_checkpoints/
