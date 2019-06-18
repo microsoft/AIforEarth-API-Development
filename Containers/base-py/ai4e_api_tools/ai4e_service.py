@@ -32,10 +32,10 @@ class Task(Resource):
     def get(self, id):
         st = self.task_mgr.GetTaskStatus(str(id))
         ret = {}
-        ret['uuid'] = id
-        ret['status'] = st[0]
-        ret['timestamp'] = st[1]
-        ret['endpoint'] = "uri"
+        ret['TaskId'] = id
+        ret['Status'] = st[0]
+        ret['Timestamp'] = st[1]
+        ret['Endpoint'] = "uri"
         return(ret)
 
 class APIService():
@@ -83,7 +83,7 @@ class APIService():
                 
                 if is_async:
                     task_info = self.api_task_manager.AddTask(request)
-                    taskId = str(task_info['uuid'])
+                    taskId = str(task_info['TaskId'])
                     combined_kwargs["taskId"] = taskId
 
                     self.wrap_async_endpoint(trace_name, *args, **combined_kwargs)

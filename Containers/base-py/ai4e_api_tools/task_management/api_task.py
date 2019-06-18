@@ -19,10 +19,10 @@ class TaskManager:
         self.status_dict[id] = ('created', datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"), 'task')
 
         ret = {}
-        ret['uuid'] = id
-        ret['status'] = self.status_dict[id][0]
-        ret['timestamp'] = self.status_dict[id][1]
-        ret['endpoint'] = self.status_dict[id][2]
+        ret['TaskId'] = id
+        ret['Status'] = self.status_dict[id][0]
+        ret['Timestamp'] = self.status_dict[id][1]
+        ret['Endpoint'] = self.status_dict[id][2]
         return(ret)
 
     def UpdateTaskStatus(self, taskId, status):
