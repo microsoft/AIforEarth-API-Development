@@ -4,10 +4,10 @@ AddTask<-function(req){
   taskId = 1
 
   newTask <- data.frame(
-    uuid = taskId,
-    status = c("queued"),
-    timestamp = c(format(Sys.time(), "%b %d %X %Y")),
-    endpoint = "uri"
+    TaskId = taskId,
+    Status = c("queued"),
+    Timestamp = c(format(Sys.time(), "%b %d %X %Y")),
+    Endpoint = "uri"
   )
 
   if (file.exists("tasks.csv")) {
@@ -16,7 +16,7 @@ AddTask<-function(req){
 
     lastId <- tail(tasks, 1)[,1]
     taskId = lastId + 1
-    newTask$uuid <- taskId
+    newTask$TaskId <- taskId
     
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
@@ -41,10 +41,10 @@ UpdateTaskStatus<-function(taskId, status){
   }
   else {
     newTask <- data.frame(
-      uuid = taskId,
-      status = c(status),
-      timestamp = c(format(Sys.time(), "%b %d %X %Y")),
-      endpoint = "uri"
+      TaskId = taskId,
+      Status = c(status),
+      Timestamp = c(format(Sys.time(), "%b %d %X %Y")),
+      Endpoint = "uri"
     )
 
     write.csv(newTask, "tasks.csv", row.names=FALSE)
