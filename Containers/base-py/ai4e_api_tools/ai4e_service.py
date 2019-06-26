@@ -3,8 +3,8 @@
 from threading import Thread
 from os import getenv
 from opencensus.trace.tracer import Tracer
-from opencensus.trace.exporters.ocagent import trace_exporter
-from opencensus.trace.exporters.transports.background_thread import BackgroundThreadTransport
+from opencensus.ext.azure.trace_exporter import AzureExporter
+
 from flask import Flask, abort, request, current_app, views
 from flask_restful import Resource, Api
 import signal
@@ -14,12 +14,20 @@ import sys
 from functools import wraps
 from werkzeug.exceptions import HTTPException
 
-# Use OpenCensus to send traces to Application Insights
-export_LocalForwarder = trace_exporter.TraceExporter(
-    transport=BackgroundThreadTransport,
-    service_name=getenv("SERVICE_OWNER", "Default") + ":" + getenv("SERVICE_MODEL_NAME", "Default"),
-    endpoint=getenv('OCAGENT_TRACE_EXPORTER_ENDPOINT'))
-tracer = Tracer(exporter=export_LocalForwarder)
+from opencensus.trace.tracer import Tracer
+from opencensus.trace.samplers import ProbabilitySampler
+
+if not getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
+    tracer = Tracer()
+else:
+    sampling_rate = getenv('TRACE_SAMPLING_RATE', None)
+    if not sampling_rate:
+        sampling_rate = 1.0
+
+    tracer = Tracer(
+        exporter=AzureExporter(),
+        sampler=ProbabilitySampler(float(sampling_rate)),
+    )
 
 MAX_REQUESTS_KEY_NAME = 'max_requests'
 CONTENT_TYPE_KEY_NAME = 'content_type'
