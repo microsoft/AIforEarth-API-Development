@@ -13,10 +13,7 @@ RUN ./ai4e_api_tools/requirements/install-api-hosting-reqs.sh
 # Install Azure Blob SDK
 RUN ./ai4e_api_tools/requirements/install-azure-blob.sh
 
-# Install Opencensus
-RUN ./ai4e_api_tools/requirements/install-opencensus.sh
-
-# Install Application Insights
+# Install Application Insights and OpenCensus
 RUN ./ai4e_api_tools/requirements/install-appinsights.sh
 
 COPY ./base-py/ai4e_api_tools /ai4e_api_tools/

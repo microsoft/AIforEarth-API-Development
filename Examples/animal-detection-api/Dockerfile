@@ -11,9 +11,6 @@ ENV PYTHONPATH="${PYTHONPATH}:/ai4e_api_tools"
 # Install Miniconda, Flask, Supervisor, uwsgi
 RUN ./ai4e_api_tools/requirements/install-api-hosting-reqs.sh
 
-# Install Opencensus
-RUN ./ai4e_api_tools/requirements/install-opencensus.sh
-
 # Install Application Insights
 RUN ./ai4e_api_tools/requirements/install-appinsights.sh
 
@@ -29,15 +26,12 @@ COPY ./supervisord.conf /etc/supervisord.conf
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
 
-COPY ./LocalForwarder.config /lf/
 # Copy your API code
 COPY ./animal-detector /app/animal-detector/
 
 # Application Insights keys and trace configuration
 ENV APPINSIGHTS_INSTRUMENTATIONKEY= \
-    APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY= \
-    LOCALAPPDATA=/app_insights_data \
-    OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
+    TRACE_SAMPLING_RATE=1.0
 
 # The following variables will allow you to filter logs in AppInsights
 ENV SERVICE_OWNER=AI4E_Test \
