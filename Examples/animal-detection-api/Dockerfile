@@ -1,5 +1,5 @@
 # Pull in the AI for Earth Base Image, so we can extract necessary libraries.
-FROM ai4epublic.azurecr.io/public/aiforearth/cuda-9.0-base-py:1.8
+FROM mcr.microsoft.com/aiforearth/base-py:1.8-cuda-9.0-runtime
 
 RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
     && conda install -c conda-forge -n ai4e_py_api numpy pandas
