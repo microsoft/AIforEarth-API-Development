@@ -29,9 +29,13 @@ else:
         sampler=ProbabilitySampler(float(sampling_rate)),
     )
 
+disable_request_metric = getenv('DISABLE_CURRENT_REQUEST_METRIC', False)
+
 MAX_REQUESTS_KEY_NAME = 'max_requests'
 CONTENT_TYPE_KEY_NAME = 'content_type'
 CONTENT_MAX_KEY_NAME = 'content_max_length'
+
+APP_INSIGHTS_REQUESTS_KEY_NAME = 'CURRENT_REQUESTS'
 
 class Task(Resource):
     def __init__(self, **kwargs):
@@ -138,9 +142,13 @@ class APIService():
 
     def increment_requests(self, api_path):
         self.func_request_counts[api_path] += 1
+        if (disable_request_metric == False):
+            self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + self.api_prefix + api_path, self.func_request_counts[api_path])
 
     def decrement_requests(self, api_path):
         self.func_request_counts[api_path] -= 1
+        if (disable_request_metric == False):
+            self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + self.api_prefix + api_path, self.func_request_counts[api_path])
 
     def wrap_sync_endpoint(self, trace_name=None, *args, **kwargs):
         if (trace_name):
