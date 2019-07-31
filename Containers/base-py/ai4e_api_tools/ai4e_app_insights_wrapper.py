@@ -62,3 +62,13 @@ class AI4EAppInsights(object):
 
     def log_exception(self, message, taskId = None, additionalProperties = None):
         self._log(message, "CRITICAL", taskId, additionalProperties)
+
+    def track_metric(self, metric_name, metric_value):
+        if (self.grantee_key):
+            print("Tracking metric:" + metric_name + ", Value: " + str(metric_value))
+            self.appinsights_grantee_client.track_metric(metric_name, metric_value)
+            self.appinsights_grantee_client.flush()
+
+            if (self.appinsights_ai4e_client):
+                self.appinsights_ai4e_client.track_metric(metric_name, metric_value)
+                self.appinsights_ai4e_client.flush()
