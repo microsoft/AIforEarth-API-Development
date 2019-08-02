@@ -108,7 +108,10 @@ def render_bounding_boxes(boxes, scores, classes, image, label_map={}, confidenc
             display_strs.append([displayed_label])
 
     display_boxes = np.array(display_boxes)
-    draw_bounding_boxes_on_image(image, display_boxes, display_str_list_list=display_strs)
+    if display_boxes.shape == (0,): # no detections are above threshold
+        return
+    else:
+        draw_bounding_boxes_on_image(image, display_boxes, display_str_list_list=display_strs)
 
 # the following two functions are from https://github.com/tensorflow/models/blob/master/research/object_detection/utils/visualization_utils.py
 
