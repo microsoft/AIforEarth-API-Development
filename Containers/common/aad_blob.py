@@ -50,6 +50,12 @@ class AadBlob:
         service.create_blob_from_text(container, blob, text, 'utf-8', max_connections=100, timeout=600, progress_callback=self.callback)
         return service.make_blob_url(container, blob)
 
+    def create_blob_from_path(self, container, blob, path):
+        service = self._get_service()
+        print("{} for {}/{}".format('create_blob_from_path', container, blob))
+        service.create_blob_from_path(container, blob, path, max_connections=100, timeout=600, progress_callback=self.callback)
+        return service.make_blob_url(container, blob)
+
     def get_blob(self, container, blob):
         service = self._get_service()
         with io.BytesIO() as output_stream:
@@ -80,3 +86,7 @@ class AadBlob:
         service = self._get_service()
         url = service.make_blob_url(container, blob)
         return url
+
+    def does_blob_exist(self, container, blob):
+        service = self._get_service()
+        return service.exists(container, blob)
