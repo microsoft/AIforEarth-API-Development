@@ -34,7 +34,7 @@ class TaskManager:
 
     def AddPipelineTask(self, taskId, organization_moniker, version, api_name, body):
         next_url = organization_moniker + '/' + version + '/' + api_name
-        UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
+        self.UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
         return "Pipelining is not supported in a single node deployment, but the next service is: " + next_url
 
     def CompleteTask(self, taskId, status):
