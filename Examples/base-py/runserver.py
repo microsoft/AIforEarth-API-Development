@@ -9,7 +9,6 @@ from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import APIService
 
 print('Creating Application')
-
 app = Flask(__name__)
 
 # Use the AI4EAppInsights library to send log messages. NOT REQURIED
@@ -26,7 +25,7 @@ def process_request_data(request):
     return_values = {'data': None}
     try:
         # Attempt to load the body
-        return_values['data'] = request.data
+        return_values['data'] = request.get_json()
     except:
         log.log_error('Unable to load the request data')   # Log to Application Insights
     return return_values
@@ -45,7 +44,7 @@ def run_model(taskId, body):
     api_path = '/example', 
     methods = ['POST'], 
     request_processing_function = process_request_data, # This is the data process function that you created above.
-    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
+    maximum_concurrent_requests = 3, # If the number of requests exceed this limit, a 503 is returned to the caller.
     content_types = ['application/json'],
     content_max_length = 1000, # In bytes
     trace_name = 'post:my_long_running_funct')
@@ -55,14 +54,11 @@ def default_post(*args, **kwargs):
     log.log_debug('Started task', taskId) # Log to Application Insights
 
     # Get the data from the dictionary key that you assigned in your process_request_data function.
-    request_data = kwargs.get('data')
+    request_json = kwargs.get('data')
 
-    if not request_data:
+    if not request_json:
         ai4e_service.api_task_manager.FailTask(taskId, 'Task failed - Body was empty or could not be parsed.')
         return -1
-
-    # Load the request data into JSON format.
-    request_json = json.loads(request_data)
 
     # Run your model function
     run_model(taskId, request_json)

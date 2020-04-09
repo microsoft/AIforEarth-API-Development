@@ -2,40 +2,27 @@
 # Licensed under the MIT License.
 from threading import Thread
 from os import getenv
-from opencensus.trace.tracer import Tracer
-from opencensus.ext.azure.trace_exporter import AzureExporter
 
 from flask import Flask, abort, request, current_app, views
 from flask_restful import Resource, Api
 import signal
-from ai4e_app_insights import AppInsights
 from task_management.api_task import TaskManager
 import sys
 from functools import wraps
 from werkzeug.exceptions import HTTPException
 
 from opencensus.trace.tracer import Tracer
-from opencensus.trace.samplers import ProbabilitySampler
+from opencensus.trace.samplers import ProbabilitySampler, AlwaysOnSampler
+from opencensus.ext.azure.trace_exporter import AzureExporter
+from opencensus.ext.flask.flask_middleware import FlaskMiddleware
 
-if not getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
-    tracer = Tracer()
-else:
-    sampling_rate = getenv('TRACE_SAMPLING_RATE', None)
-    if not sampling_rate:
-        sampling_rate = 1.0
-
-    tracer = Tracer(
-        exporter=AzureExporter(),
-        sampler=ProbabilitySampler(float(sampling_rate)),
-    )
-
-disable_request_metric = getenv('DISABLE_CURRENT_REQUEST_METRIC', False)
+disable_request_metric = getenv('DISABLE_CURRENT_REQUEST_METRIC', 'False')
 
 MAX_REQUESTS_KEY_NAME = 'max_requests'
 CONTENT_TYPE_KEY_NAME = 'content_type'
 CONTENT_MAX_KEY_NAME = 'content_max_length'
 
-APP_INSIGHTS_REQUESTS_KEY_NAME = 'CURRENT_REQUESTS'
+APP_INSIGHTS_REQUESTS_KEY_NAME = 'REJECTED_STATE'
 
 class Task(Resource):
     def __init__(self, **kwargs):
@@ -55,11 +42,11 @@ class APIService():
         self.app = flask_app
         self.log = logger
         self.api = Api(self.app)
-        self.appinsights = AppInsights(self.app)
         self.is_terminating = False
         self.func_properties = {}
         self.func_request_counts = {}
         self.api_prefix = getenv('API_PREFIX')
+        self.tracer = None
         
         self.api_task_manager = TaskManager()
         signal.signal(signal.SIGINT, self.initialize_term)
@@ -71,6 +58,24 @@ class APIService():
         self.api.add_resource(Task, self.api_prefix + '/task/<int:id>', resource_class_kwargs={ 'task_manager': self.api_task_manager })
         print("Adding url rule: " + self.api_prefix + '/task/<int:taskId>')
 
+        if getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
+            azure_exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')))
+
+            sampling_rate = getenv('TRACE_SAMPLING_RATE', None)
+            if not sampling_rate:
+                sampling_rate = 1.0
+                
+            self.middleware = FlaskMiddleware(
+                self.app,
+                exporter=azure_exporter,
+                sampler=ProbabilitySampler(rate=float(sampling_rate)),
+            )
+
+            self.tracer = Tracer(
+                exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY'))),
+                sampler=ProbabilitySampler(rate=float(sampling_rate)),
+            )
+
         self.app.before_request(self.before_request)
 
     def health_check(self):
@@ -79,9 +84,9 @@ class APIService():
 
     def api_func(self, is_async, api_path, methods, request_processing_function, maximum_concurrent_requests, content_types = None, content_max_length = None, trace_name = None, *args, **kwargs):
         def decorator_api_func(func):
-            if not api_path in self.func_properties:
-                self.func_properties[api_path] = {MAX_REQUESTS_KEY_NAME: maximum_concurrent_requests, CONTENT_TYPE_KEY_NAME: content_types, CONTENT_MAX_KEY_NAME: content_max_length}
-                self.func_request_counts[api_path] = 0
+            if not self.api_prefix + api_path in self.func_properties:
+                self.func_properties[self.api_prefix + api_path] = {MAX_REQUESTS_KEY_NAME: maximum_concurrent_requests, CONTENT_TYPE_KEY_NAME: content_types, CONTENT_MAX_KEY_NAME: content_max_length}
+                self.func_request_counts[self.api_prefix + api_path] = 0
 
             @wraps(func)
             def api(*args, **kwargs):
@@ -128,10 +133,6 @@ class APIService():
             abort(503, {'message': 'Service is busy, please try again later.'})
 
         if request.path in self.func_properties:
-            if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
-                print('Service is busy. Request has been denied.')
-                abort(503, {'message': 'Service is busy, please try again later.'})
-
             if (self.func_properties[request.path][CONTENT_TYPE_KEY_NAME] and not request.content_type in self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]):
                 print('Invalid content type. Request has been denied.')
                 abort(401, {'message': 'Content-type must be ' + self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]})
@@ -140,26 +141,41 @@ class APIService():
                 print('Request is too large. Request has been denied.')
                 abort(413, {'message': 'Request content too large (' + str(request.content_length) + "). Must be smaller than: " + str(self.func_properties[request.path][CONTENT_MAX_KEY_NAME])})
 
+            if (disable_request_metric == 'False'):
+                if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
+                    print('Current requests: ' + str(self.func_request_counts[request.path] + 1))
+                    print('Max requests: ' + str(self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]))
+                    self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + request.path, 1)
+
+                    print('Service is busy. Request has been denied.')
+                    abort(503, {'message': 'Service is busy, please try again later.'})
+                else:
+                    self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + request.path, 0)
+
     def increment_requests(self, api_path):
-        self.func_request_counts[api_path] += 1
-        if (disable_request_metric == False):
-            self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + self.api_prefix + api_path, self.func_request_counts[api_path])
+        self.func_request_counts[self.api_prefix + api_path] += 1
 
     def decrement_requests(self, api_path):
-        self.func_request_counts[api_path] -= 1
-        if (disable_request_metric == False):
-            self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + self.api_prefix + api_path, self.func_request_counts[api_path])
+        self.func_request_counts[self.api_prefix + api_path] -= 1
 
     def wrap_sync_endpoint(self, trace_name=None, *args, **kwargs):
-        if (trace_name):
-            with tracer.span(name=trace_name) as span:
+        if (self.tracer):
+            if (not trace_name):
+                api_path = kwargs['api_path']
+                trace_name = api_path
+
+            with self.tracer.span(name=trace_name) as span:
                 return self._execute_func_with_counter(*args, **kwargs)
         else:
             return self._execute_func_with_counter(*args, **kwargs)
 
     def wrap_async_endpoint(self, trace_name=None, *args, **kwargs):
-        if (trace_name):
-            with tracer.span(name=trace_name) as span:
+        if (self.tracer):
+            if (not trace_name):
+                api_path = kwargs['api_path']
+                trace_name = api_path
+
+            with self.tracer.span(name=trace_name) as span:
                 self._create_and_execute_thread(*args, **kwargs)
         else:
             self._create_and_execute_thread(*args, **kwargs)

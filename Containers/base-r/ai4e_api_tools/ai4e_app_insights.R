@@ -8,8 +8,7 @@ library(sjmisc)
 
 APP_SVC_URL <- "https://dc.services.visualstudio.com/v2/track"
 
-CONF_KEY_GRANTEE <- Sys.getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
-CONF_KEY_AI4E <- Sys.getenv("APPINSIGHTS_AI4E_INSTRUMENTATIONKEY")
+APPINSIGHTS_INSTRUMENTATIONKEY <- Sys.getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
 CONF_SERVICE_OWNER <- Sys.getenv("SERVICE_OWNER", unset="")
 CONF_SERVICE_CLUSTER <- Sys.getenv("SERVICE_CLUSTER", unset="")
 CONF_SERVICE_MODEL_NAME <- Sys.getenv("SERVICE_MODEL_NAME", unset="")
@@ -22,17 +21,13 @@ CONF_SERVICE_CONTAINER_VERSION <- Sys.getenv("SERVICE_CONTAINER_VERSION", unset=
 CONF_SERVICE_CONTAINER_NAME <- Sys.getenv("SERVICE_CONTAINER_NAME", unset="")
 IS_DEBUG <- Sys.getenv("DEBUG", unset=FALSE)
 
-if (nchar(trim(CONF_KEY_AI4E)) == 0) {
-  CONF_KEY_AI4E = NULL
-}
-
-if (nchar(trim(CONF_KEY_GRANTEE)) == 0) {
-  CONF_KEY_GRANTEE = NULL
+if (nchar(trim(APPINSIGHTS_INSTRUMENTATIONKEY)) == 0) {
+  APPINSIGHTS_INSTRUMENTATIONKEY = NULL
 }
 
 log <- function(message, sev, taskId, additionalProperties){
-  if (!is.null(CONF_KEY_GRANTEE)) {
-    payload <- get_payload(message, sev, CONF_KEY_GRANTEE, taskId, additionalProperties)
+  if (!is.null(APPINSIGHTS_INSTRUMENTATIONKEY)) {
+    payload <- get_payload(message, sev, APPINSIGHTS_INSTRUMENTATIONKEY, taskId, additionalProperties)
     if (IS_DEBUG) {
         print(payload)
       }
@@ -40,18 +35,6 @@ log <- function(message, sev, taskId, additionalProperties){
 
     if (status_code(r) != 200){
       print(http_status(r))
-    }
-
-    if (!is.null(CONF_KEY_AI4E)){
-      payload <- get_payload(message, sev, CONF_KEY_AI4E, taskId, additionalProperties)
-      if (IS_DEBUG) {
-        print(payload)
-      }
-      r = POST(APP_SVC_URL, body=payload)
-
-      if (status_code(r) != 200){
-        print(http_status(r))
-      }
     }
   }
 }

@@ -19,8 +19,7 @@ from ai4e_app_insights_context import AI4ETelemetryContext
 
 CONF_PREFIX = "APPINSIGHTS"
 
-CONF_KEY_GRANTEE = CONF_PREFIX + "_INSTRUMENTATIONKEY"
-CONF_KEY_AI4E = CONF_PREFIX + "_AI4E_INSTRUMENTATIONKEY"
+APPINSIGHTS_INSTRUMENTATIONKEY = CONF_PREFIX + "_INSTRUMENTATIONKEY"
 CONF_ENDPOINT_URI = CONF_PREFIX + "_ENDPOINT_URI"
 CONF_DISABLE_REQUEST_LOGGING = CONF_PREFIX + "_DISABLE_REQUEST_LOGGING"
 CONF_DISABLE_TRACE_LOGGING = CONF_PREFIX + "_DISABLE_TRACE_LOGGING"
@@ -81,8 +80,7 @@ class AppInsights(object):
             app (flask.Flask). the Flask application for which to initialize the extension.
         """
         socket.setdefaulttimeout(30)
-        self._key_grantee = None
-        self._key_ai4e = None
+        self._appinsights_key = None
         self._endpoint_uri = None
         self._channel = None
         self._requests_middleware = None
@@ -102,27 +100,15 @@ class AppInsights(object):
             app (flask.Flask). the Flask application for which to initialize the extension.
         """
         print("Starting application insights module.")
-        self._key_grantee = app.config.get(CONF_KEY_GRANTEE) or getenv(CONF_KEY_GRANTEE)
-        self._key_ai4e = app.config.get(CONF_KEY_AI4E) or getenv(CONF_KEY_AI4E)
+        self._appinsights_key = app.config.get(APPINSIGHTS_INSTRUMENTATIONKEY) or getenv(APPINSIGHTS_INSTRUMENTATIONKEY)
 
-        if (self._key_grantee and len(self._key_grantee.strip()) > 0):
-            self._key_grantee = self._key_grantee.strip()
+        if (self._appinsights_key and len(self._appinsights_key.strip()) > 0):
+            self._appinsights_key = self._appinsights_key.strip()
         else:
-            self._key_grantee = None
-        
-        if (self._key_ai4e and len(self._key_ai4e.strip()) > 0):
-            self._key_ai4e = self._key_ai4e.strip()
-        else:
-            self._key_ai4e = None
+            self._appinsights_key = None
 
-        if self._key_grantee:
+        if self._appinsights_key:
             print("Grantee application insights key set.")
-
-        if self._key_ai4e:
-            print("AI4E application insights key set: " + str(self._key_ai4e))
-
-        if not self._key_grantee and not self._key_ai4e:
-            return
 
         self._endpoint_uri = app.config.get(CONF_ENDPOINT_URI)
 
@@ -155,10 +141,7 @@ class AppInsights(object):
         if not enabled:
             return
 
-        # If in the AI4E backend, only send uwsgi traces to AI4E
-        wsgi_key = self._key_ai4e
-        if not wsgi_key:
-            wsgi_key = self._key_grantee
+        wsgi_key = self._appinsights_key
 
         self._requests_middleware = WSGIApplication(
             wsgi_key, app.wsgi_app, telemetry_channel=self._channel)
@@ -178,18 +161,11 @@ class AppInsights(object):
         if not enabled:
             return
 
-        if self._key_grantee:
+        if self._appinsights_key:
             self._trace_log_handler_grantee = LoggingHandler(
-                self._key_grantee, telemetry_channel=self._channel)
+                self._appinsights_key, telemetry_channel=self._channel)
 
             app.logger.addHandler(self._trace_log_handler_grantee)
-
-        if self._key_ai4e:
-            print("Starting trace logging")
-            self._trace_log_handler_ai4e = LoggingHandler(
-                self._key_ai4e, telemetry_channel=self._channel)
-
-            app.logger.addHandler(self._trace_log_handler_ai4e)
 
     def _init_exception_logging(self, app):
         """
@@ -204,14 +180,9 @@ class AppInsights(object):
         if not enabled:
             return
 
-        if self._key_grantee:
+        if self._appinsights_key:
             self._exception_telemetry_client_grantee = TelemetryClient(
-                self._key_grantee, telemetry_channel=self._channel)
-
-        if self._key_ai4e:
-            self._exception_telemetry_client_ai4e = TelemetryClient(
-                self._key_ai4e, telemetry_channel=self._channel)
-
+                self._appinsights_key, telemetry_channel=self._channel)
 
         @app.errorhandler(Exception)
         def exception_handler(exception):
