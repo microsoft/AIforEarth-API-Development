@@ -1,49 +1,60 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import random, datetime
+import datetime
 import os
 import requests
+import uuid
+import json
 
 print("Creating task manager.")
+
+LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '')
 
 class TaskManager:
     def __init__(self):
         self.status_dict = {}
 
     def GetTaskId(self):
-        id = str(random.randint(1, 10000))
-        while id in self.status_dict:
-            id = str(random.randint(1, 10000))
-        return id
+        return str(uuid.uuid4())
 
     def AddTask(self, request):
-        id = self.GetTaskId()        
-        self.status_dict[id] = ('created', datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"), 'task')
+        id = self.GetTaskId()
 
-        ret = {}
-        ret['TaskId'] = id
-        ret['Status'] = self.status_dict[id][0]
-        ret['Timestamp'] = self.status_dict[id][1]
-        ret['Endpoint'] = self.status_dict[id][2]
-        return(ret)
+        statuses = []
+        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+                statuses = json.load(f)
+                if (f_exists):
+                    statuses = json.load(f)
+                f.close()
+
+        status = {}
+        status['TaskId'] = id
+        status['Status'] = 'created'
+        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+        status['Endpoint'] = request.path
+
+        statuses.append(status)
+
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
+                json.dump(statuses, f)
+                f.close()
+        return(status)
 
     def UpdateTaskStatus(self, taskId, status):
-        if (taskId in self.status_dict):
-            stat = self.status_dict[taskId]
-            self.status_dict[taskId] = (status, stat[1], stat[2])
-        else:
-            self.status_dict[taskId] = (status, stat[1], stat[2])
+        statuses = []
 
-        local_dir = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '')
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+            statuses = json.load(f)
+            f.close()
 
-        if os.path.exists(local_dir):
-            append_write = 'a' # append if already exists
-        else:
-            append_write = 'w' # make a new file if not
+        for rec_status in statuses:
+            if (rec_status['TaskId'] == taskId):
+                rec_status['Status'] = status
+                rec_status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
 
-        if len(local_dir) > 0:
-            f = open(local_dir + '/task_status.txt', append_write)
-            f.write(status)
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
+            json.dump(statuses, f)
             f.close()
 
     def AddPipelineTask(self, taskId, organization_moniker, version, api_name, body):
@@ -69,10 +80,16 @@ class TaskManager:
         self.UpdateTaskStatus(taskId, status)
 
     def GetTaskStatus(self, taskId):
-        try:
-            if taskId in self.status_dict:
-                return self.status_dict[taskId]
-            else:
-                return "not found"
-        except:
-            print(sys.exc_info()[0])
+        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+                statuses = json.load(f)
+
+                for rec_status in statuses:
+                    if (rec_status['TaskId'] == taskId):
+                        return rec_status
+        status = {}
+        status['TaskId'] = taskId
+        status['Status'] = 'created'
+        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+        status['Endpoint'] = ''
+        return status

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 from threading import Thread
 from os import getenv
+import json
 
 from flask import Flask, abort, request, current_app, views
 from flask_restful import Resource, Api
@@ -30,12 +31,7 @@ class Task(Resource):
 
     def get(self, id):
         st = self.task_mgr.GetTaskStatus(str(id))
-        ret = {}
-        ret['TaskId'] = id
-        ret['Status'] = st[0]
-        ret['Timestamp'] = st[1]
-        ret['Endpoint'] = "uri"
-        return(ret)
+        return(st)
 
 class APIService():
     def __init__(self, flask_app, logger):
@@ -55,7 +51,7 @@ class APIService():
         self.app.add_url_rule(self.api_prefix + '/', view_func = self.health_check, methods=['GET'])
         print("Adding url rule: " + self.api_prefix + '/')
         # Add task endpoint
-        self.api.add_resource(Task, self.api_prefix + '/task/<int:id>', resource_class_kwargs={ 'task_manager': self.api_task_manager })
+        self.api.add_resource(Task, self.api_prefix + '/task/<id>', resource_class_kwargs={ 'task_manager': self.api_task_manager })
         print("Adding url rule: " + self.api_prefix + '/task/<int:taskId>')
 
         if getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
