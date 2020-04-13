@@ -55,6 +55,7 @@ RUN Rscript -e 'install.packages("RCurl");'
 RUN Rscript -e 'install.packages("sjmisc");'
 RUN Rscript -e 'install.packages("reticulate");'
 RUN Rscript -e 'install.packages("urltools");'
+RUN Rscript -e 'install.packages("ids");'
 
 RUN apt-get update \
   && apt-get install -y python3-pip python3-dev \
@@ -64,7 +65,8 @@ RUN apt-get update \
   
 # Install Azure Blob SDK
 RUN pip3 install azure-mgmt-storage \
-        azure-storage-blob
+        azure-storage-blob \
+        azure-identity
 
 COPY ./base-r/ai4e_api_tools /ai4e_api_tools/
 COPY ./common/sas_blob.py /ai4e_api_tools/

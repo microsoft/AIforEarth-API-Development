@@ -37,7 +37,8 @@ RUN pip3 install flask \
 
 # Install Azure Blob SDK
 RUN pip3 install azure-mgmt-storage \
-        azure-storage-blob
+        azure-storage-blob \
+        azure-identity
 
 # Install Application Insights Opencensus packages
 RUN pip3 install opencensus-ext-azure \

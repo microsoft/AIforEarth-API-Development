@@ -1,17 +1,7 @@
-FROM mcr.microsoft.com/aiforearth/base-r:latest
-
-# Install fortran; required for adehabitat
-RUN apt-get --assume-yes install gfortran
-
+#FROM mcr.microsoft.com/aiforearth/base-r:latest
+FROM base_r
 # Install some addtional R packages
-RUN R -e 'install.packages("raster"); library(raster)'  
-RUN R -e 'install.packages("maptools"); library(maptools)'
-RUN R -e 'install.packages("ade4"); library(ade4)'
-RUN R -e 'install.packages("adehabitatMA"); library(adehabitatMA)'
-RUN R -e 'install.packages("adehabitatLT"); library(adehabitatLT)'
-RUN R -e 'install.packages("trip"); library(trip)'
-RUN R -e 'install.packages("adehabitatHR"); library(adehabitatHR)'
-
+#RUN R -e 'install.packages("raster"); library(raster)'  
 RUN R -e 'print(installed.packages());'
 
 # Note: supervisor.conf reflects the location and name of your api code.
@@ -38,12 +28,16 @@ ENV SERVICE_OWNER=AI4E_Test \
     SERVICE_MODEL_FRAMEOWRK_VERSION=microsoft-r-open-3.5.1 \
     SERVICE_MODEL_VERSION=1.0
 
+ENV STORAGE_ACCOUNT_NAME ""
+ENV STORAGE_ACCOUNT_KEY ""
+
 # Expose the port that is to be used when calling your API
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
-ENTRYPOINT [ "/startup.sh" ]
+#ENTRYPOINT [ "/startup.sh" ]
 
 # Replace the above entrypoint with the following one for faster debugging.
-#ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
-#CMD ["/app/my_api/api_example.R"]
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
+CMD ["/app/my_api/api_example.R"]
+#CMD [ "sleep", "1000000"]

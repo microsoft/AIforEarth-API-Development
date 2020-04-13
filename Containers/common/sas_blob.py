@@ -1,25 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import uuid
-import time
 import io
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, urlparse
 
-from azure.storage.blob import (
-    BlockBlobService,
-    ContainerPermissions,
-    BlobPermissions,
-    PublicAccess,
-    ContentSettings,
-    BlobBlock,
-    BlockListType,
-)
-from azure.storage.common import (
-    AccessPolicy,
-    ResourceTypes,
-    AccountPermissions,
-)
+from azure.identity import ClientSecretCredential
+from azure.storage.blob import BlobServiceClient, generate_container_sas, ContainerSasPermissions, ContainerClient, BlobClient
 
 class SasBlob:
     def _get_resource_reference(self, prefix):
@@ -50,65 +37,83 @@ class SasBlob:
         loc = url_parts.netloc
         return loc.split(".")[0]
 
+    def delete_container(self, account_name, account_key, container_name):
+        account_url = "https://{}.blob.core.windows.net".format(account_name)
+
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=account_key)
+        blob_service_client.delete_container(container_name)
+
     def create_writable_container_sas(self, account_name, account_key, container_name, access_duration_hrs):
-        block_blob_service = BlockBlobService(account_name=account_name, account_key=account_key)
- 
-        block_blob_service.create_container(container_name)
+        account_url = "https://{}.blob.core.windows.net".format(account_name)
 
-        token = block_blob_service.generate_container_shared_access_signature(
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=account_key)
+        container_client = blob_service_client.create_container(container_name)
+
+        sas_permissions = ContainerSasPermissions(read=True, write=True, delete=False, list=True)
+
+        expiration = datetime.utcnow() + timedelta(hours=access_duration_hrs)
+
+        sas_token = generate_container_sas(
+            account_name,
             container_name,
-            ContainerPermissions.WRITE + ContainerPermissions.READ + ContainerPermissions.LIST,
-            datetime.utcnow() + timedelta(hours=access_duration_hrs))
+            account_key=account_key,
+            permission=sas_permissions,
+            expiry=expiration
+        )
+        
+        return '{}/{}?{}'.format(account_url, container_name, sas_token)
 
-        return block_blob_service.make_container_url(container_name=container_name, sas_token=token).replace("restype=container", "")
+    def write_blob_from_bytes(self, container_sas_uri, blob_name, input_bytes):        
+        container_client = ContainerClient.from_container_url(container_sas_uri)
+        blob_client = container_client.get_blob_client(blob_name)
 
-    def write_blob_from_bytes(self, sas_uri, blob_name, input_bytes):
-        sas_service = BlockBlobService(
-            account_name=self.get_account_from_uri(sas_uri),
-            sas_token=self.get_sas_key_from_uri(sas_uri))
+        blob_client.upload_blob(input_bytes, overwrite=True)
+        
+        account_name = self.get_account_from_uri(container_sas_uri)
+        container_name = self.get_container_from_uri(container_sas_uri)
+        sas_key = self.get_sas_key_from_uri(container_sas_uri)
+        return 'https://{}.blob.core.windows.net/{}/{}?{}'.format(account_name, container_name, blob_name, sas_key)
 
-        container_name = self.get_container_from_uri(sas_uri)
+    def write_blob_from_text(self, container_sas_uri, blob_name, text):
+        container_client = ContainerClient.from_container_url(container_sas_uri)
+        blob_client = container_client.get_blob_client(blob_name)
+        blob_client.upload_blob(text, overwrite=True)
 
-        sas_service.create_blob_from_bytes(container_name, blob_name, input_bytes)
+        account_name = self.get_account_from_uri(container_sas_uri)
+        container_name = self.get_container_from_uri(container_sas_uri)
+        sas_key = self.get_sas_key_from_uri(container_sas_uri)
+        return 'https://{}.blob.core.windows.net/{}/{}?{}'.format(account_name, container_name, blob_name, sas_key)
 
-        return sas_service.make_blob_url(container_name, blob_name, sas_token=self.get_sas_key_from_uri(sas_uri))
-
-    def write_blob_from_text(self, sas_uri, blob_name, text):
-        sas_service = BlockBlobService(
-            account_name=self.get_account_from_uri(sas_uri),
-            sas_token=self.get_sas_key_from_uri(sas_uri))
-
-        container_name = self.get_container_from_uri(sas_uri)
-
-        sas_service.create_blob_from_text(container_name, blob_name, text, 'utf-8')
-
-        return sas_service.make_blob_url(container_name, blob_name, sas_token=self.get_sas_key_from_uri(sas_uri))
-
-    def write_blob(self, sas_uri, blob_name, input_stream):
-        sas_service = BlockBlobService(
-            account_name=self.get_account_from_uri(sas_uri),
-            sas_token=self.get_sas_key_from_uri(sas_uri))
-
-        container_name = self.get_container_from_uri(sas_uri)
-
-        sas_service.create_blob_from_stream(container_name, blob_name, input_stream)
-
-        return sas_service.make_blob_url(container_name, blob_name, sas_token=self.get_sas_key_from_uri(sas_uri))
+    def write_blob(self, container_sas_uri, blob_name, input_stream):        
+        container_client = ContainerClient.from_container_url(container_sas_uri)
+        blob_client = container_client.get_blob_client(blob_name)
+        blob_client.upload_blob(input_stream, overwrite=True)
+        
+        account_name = self.get_account_from_uri(container_sas_uri)
+        container_name = self.get_container_from_uri(container_sas_uri)
+        sas_key = self.get_sas_key_from_uri(container_sas_uri)
+        return 'https://{}.blob.core.windows.net/{}/{}?{}'.format(account_name, container_name, blob_name, sas_key)
 
     def get_blob(self, sas_uri):
-        sas_service = BlockBlobService(
-            account_name=self.get_account_from_uri(sas_uri),
-            sas_token=self.get_sas_key_from_uri(sas_uri))
+        blob_client = BlobClient.from_blob_url(sas_uri)
+        download_stream = blob_client.download_blob()
 
         with io.BytesIO() as output_stream:
-            blob = sas_service.get_blob_to_stream(self.get_container_from_uri(sas_uri), self.get_blob_from_uri(sas_uri), output_stream)
-            return blob
+            download_stream.readinto(output_stream)
+            return output_stream
 
-    def get_blob_sas_uri(self, container_sas_uri, blob_name, create_if_not_exists = False):
+    def save_local_text(self, sas_uri, local_file):
+        blob_client = BlobClient.from_blob_url(sas_uri)
+
+        with open(local_file, "w") as open_file:
+            download_stream = blob_client.download_blob(encoding='UTF-8')
+            open_file.write(download_stream.readall())
+
+    def get_blob_sas_uri(self, container_sas_uri, blob_name):
+        container_client = ContainerClient.from_container_url(container_sas_uri)
+        blob_client = container_client.get_blob_client(blob_name)
+
+        account_name = self.get_account_from_uri(container_sas_uri)
         container_name = self.get_container_from_uri(container_sas_uri)
-        sas_service = BlockBlobService(
-            account_name=self.get_account_from_uri(container_sas_uri),
-            sas_token=self.get_sas_key_from_uri(container_sas_uri))
-        blob_uri = sas_service.make_blob_url(container_name, blob_name, sas_token=self.get_sas_key_from_uri(container_sas_uri))
-
-        return blob_uri
+        sas_key = self.get_sas_key_from_uri(container_sas_uri)
+        return 'https://{}.blob.core.windows.net/{}/{}?{}'.format(account_name, container_name, blob_name, sas_key)

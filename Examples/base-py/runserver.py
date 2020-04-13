@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-# # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
-# libraries directly.
+# # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those libraries directly.
 from time import sleep
 import json
 from flask import Flask, request, abort

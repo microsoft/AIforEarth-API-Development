@@ -52,6 +52,13 @@ To view the license for cuDNN included in the cuda base image, click [here](http
         - AI for Earth base-r base
         - AI for Earth Azure Blob mounting tools
 - Examples
+    - base-py - illustrates how to create a simple async (long-running) API.  Includes how-tos for:
+        - Logging
+        - Simple JSON request processing
+        - Request pre-processing
+        - Using and updating a task via a TaskId (informs the end user on API progress)
+        - Setting API constraints using the API decorator
+        - Simple sync endpoint
 
 ## Notes
 - Docker commands for the base and blob images must be run at the version level of the repo. Ex. `docker build . -f base-py/Dockerfile`.  Example Docker commands can be run within the example codebase.

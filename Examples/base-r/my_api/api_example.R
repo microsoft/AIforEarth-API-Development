@@ -4,54 +4,73 @@ library(future)
 plan(multiprocess)
 library(reticulate)
 library(jsonlite)
-use_virtualenv("ai4e_py_api")
+use_python('/usr/bin/python3', required = TRUE)
 source_python("/ai4e_api_tools/sas_blob.py")
 source("/ai4e_api_tools/task_management/api_task.R")
 source("/ai4e_api_tools/ai4e_app_insights.R")
 
 write.table(paste0(FALSE), file = "running.txt")
 
+STORAGE_ACCOUNT_NAME <- Sys.getenv("STORAGE_ACCOUNT_NAME")
+STORAGE_ACCOUNT_KEY <- Sys.getenv("STORAGE_ACCOUNT_KEY")
+
 # Helper function to write dataframes to csv
 WriteBlob <- function(dataframe_to_write, container_uri, blob_name, include_row_names) {
-  sas_blob_helper = SasBlob()
+  # Create a temp file stream to write the data.
   tmp <- file(tempfile())
   open(tmp, "w+")
   write.csv(dataframe_to_write, file=tmp, row.names = include_row_names, append=FALSE, fileEncoding="UTF-8")
+
+  # Read the data to save to the blob.
   seek(tmp, where=0)
   data_to_save <- paste(readLines(tmp, n=-1), collapse="\n")
+
+  # Upload the data to a blob using the AI for Earth sas_blob helper library.
+  sas_blob_helper = SasBlob()
   sas_blob_helper$write_blob_from_text(container_uri, blob_name, data_to_save)
   close(tmp)
 }
 
-GetBlobFromContainer<-function(container_uri, blob_name){
-  sas_blob_helper = SasBlob()
-  input_data <- sas_blob_helper$get_blob_sas_uri(container_uri, blob_name)
-  return(input_data)
-}
-
 # Primary working function
-ProcessData<-function(taskId, config){
+ProcessData<-function(taskId, user_data){
   tryCatch({
-    # Update task status at any time
+    # Update task status at any time to let users know how your API is progressing.
     UpdateTaskStatus(taskId, 'running')
+
+    # Get input data.
+    container_name <- user_data$container_name
+    run_id <- user_data$run_id
+
+    # For this example, create a SAS-based writable container to use.
+    access_duration_hrs <- 1
+    sas_blob_helper <- SasBlob()
+    container_sas_uri <- sas_blob_helper$create_writable_container_sas(STORAGE_ACCOUNT_NAME, STORAGE_ACCOUNT_KEY, container_name, access_duration_hrs)
+    print(paste("Container uri: ", container_sas_uri))
+
+    observation_data_file <- "/app/my_api/Observations.csv"
+    observation_data <- read.csv(observation_data_file)
+    blob_name <- "Observations.csv"
+    
+    blob_sas_uri <- sas_blob_helper$write_blob_from_text(container_sas_uri, blob_name, observation_data)
+    print(paste("Blob uri: ", blob_sas_uri))
 
     #INSERT_YOUR_MODEL_CALL_HERE
 
-    container_uri <- config$container_uri
+    # Download the Observation.csv from Azure Blob Storage and read it into observations.
+    local_file <- "./local_observation.csv"
+    observations_csv <- sas_blob_helper$save_local_text(blob_sas_uri, local_file)
+    observations <- read.csv(local_file)
 
-    run_id <- config$run_id
-    observations_csv <- GetBlobFromContainer(container_uri, paste(run_id, "Observation.csv", sep= "/"))
-    observations <- read.csv(observations_csv)
+    # Write the observations output data to the output_dir/output_name.csv Azure Blob.
+    #dir = WriteBlob(observations, container_sas_uri, paste(run_id, "output_dir/output_name.csv", sep= "/"), include_row_names=FALSE)
 
-    dir = WriteBlob(observations, container_uri, paste(run_id, "output_dir/output_name.csv", sep= "/"), include_row_names=FALSE)
-
-    write.table(paste0(FALSE), file = "running.txt")
+    # Update the task to let the caller know their request has been completed.
     UpdateTaskStatus(taskId, 'completed')
   }, error = function(err) {
     print(paste0(err))
-    write.table(paste0(FALSE), file = "running.txt")
     log_exception(paste0(err), taskId)
     UpdateTaskStatus(taskId, paste("failed - ", err))
+    write.table(paste0(FALSE), file = "running.txt")
   })
 }
 
@@ -79,15 +98,19 @@ function(req){
   write.table(paste0(TRUE), file = "running.txt")
 
   tryCatch({
+    # Get the request body data and store into input_data.
     body <- req$postBody
     input_data <- fromJSON(body, simplifyDataFrame=TRUE)
-    promise <- future(ProcessData(taskId, input_data))
-    #ProcessData(taskId, input_data)
-    message <- paste0("Starting task: ", taskId, " Output files will be placed in ", input_data$run_id, " directory.")
     directory <- input_data$run_id
+
+    # Run the model in a new "thread" so that we can return the taskId, which lets caller request the status at any time.
+    #promise <- future(ProcessData(taskId, input_data))
+    # Comment the above line and uncomment the below line to debug. taskId will not be returned until completion.
+    ProcessData(taskId, input_data)
+    message <- paste0("Starting task: ", taskId, " Output files will be placed in ", input_data$run_id, " directory.")
+    
   }, error = function(err) {
     print(paste0(err))
-    write.table(paste0(FALSE), file = "running.txt")
     log_exception(paste0(err), taskId)
     UpdateTaskStatus(taskId, paste("failed - ", err))
     res$status <- 400

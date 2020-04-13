@@ -8,7 +8,7 @@ import json
 
 print("Creating task manager.")
 
-LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '')
+LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '.')
 
 class TaskManager:
     def __init__(self):
@@ -24,8 +24,6 @@ class TaskManager:
         if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
             with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
                 statuses = json.load(f)
-                if (f_exists):
-                    statuses = json.load(f)
                 f.close()
 
         status = {}

@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 library(httr)
+library(ids)
 
 AddTask<-function(req){
-  taskId = 1
+  taskId = uuid()
 
   newTask <- data.frame(
     TaskId = taskId,
@@ -14,12 +15,7 @@ AddTask<-function(req){
 
   if (file.exists("tasks.csv")) {
     print("file exists")
-    tasks<-read.csv("tasks.csv", stringsAsFactors=FALSE)
-
-    lastId <- tail(tasks, 1)[,1]
-    taskId = lastId + 1
-    newTask$TaskId <- taskId
-    
+    tasks<-read.csv("tasks.csv", stringsAsFactors=FALSE)    
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
   else {
