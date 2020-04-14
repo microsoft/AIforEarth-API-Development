@@ -4,7 +4,7 @@ The `base-py` image hosted by the AI for Earth team on the mcr.microsoft.com reg
 
 1. Navigate to `AIforEarth-API-Development/Containers` (one level above this directory).
 
-2. Run `docker build` with a custom base image with your desired CUDA version. Specify this base image in the `BASE_IMAGE` argument (in this example, `nvidia/uda:9.0-cudnn7-runtime-ubuntu16.04` is used as the base image):
+2. Run `docker build` with a custom base image with your desired CUDA version. Specify this base image in the `BASE_IMAGE` argument (in this example, `nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04` is used as the base image):
 ```
 docker build . -f base-py/Dockerfile --build-arg BASE_IMAGE=nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04 -t <your_registry>.azurecr.io/aiforearth/base-py-cuda-90:1.2
 ```

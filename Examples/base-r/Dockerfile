@@ -1,7 +1,8 @@
 #FROM mcr.microsoft.com/aiforearth/base-r:latest
-FROM base_r
+FROM mcr.microsoft.com/aiforearth/base-r:1.5
+
 # Install some addtional R packages
-#RUN R -e 'install.packages("raster"); library(raster)'  
+RUN R -e 'install.packages("raster"); library(raster)'  
 RUN R -e 'print(installed.packages());'
 
 # Note: supervisor.conf reflects the location and name of your api code.
@@ -35,9 +36,8 @@ ENV STORAGE_ACCOUNT_KEY ""
 EXPOSE 80
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost/ || exit 1
-#ENTRYPOINT [ "/startup.sh" ]
+ENTRYPOINT [ "/startup.sh" ]
 
 # Replace the above entrypoint with the following one for faster debugging.
-ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
-CMD ["/app/my_api/api_example.R"]
-#CMD [ "sleep", "1000000"]
+#ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=80)"]
+#CMD ["/app/my_api/api_example.R"]

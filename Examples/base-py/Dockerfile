@@ -1,4 +1,4 @@
-FROM base_py
+FROM mcr.microsoft.com/aiforearth/base-py:1.12
 
 # Copy your API code
 COPY . /app/my_api/
@@ -37,6 +37,6 @@ EXPOSE 1212
 
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
   CMD curl -f http://localhost:1212/${API_PREFIX}/ || exit 1
-#ENTRYPOINT [ "/startup.sh" ]
+ENTRYPOINT [ "/startup.sh" ]
 # Comment out the line above and uncomment the following line to debug and see output messages.
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:1212", "runserver:app"]
+#ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:1212", "runserver:app"]

@@ -137,16 +137,17 @@ class APIService():
                 print('Request is too large. Request has been denied.')
                 abort(413, {'message': 'Request content too large (' + str(request.content_length) + "). Must be smaller than: " + str(self.func_properties[request.path][CONTENT_MAX_KEY_NAME])})
 
-            if (disable_request_metric == 'False'):
-                if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
-                    print('Current requests: ' + str(self.func_request_counts[request.path] + 1))
-                    print('Max requests: ' + str(self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]))
-                    self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + request.path, 1)
+            denied_request=0
+            if (self.func_request_counts[request.path] + 1 > self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]):
+                print('Current requests: ' + str(self.func_request_counts[request.path] + 1))
+                print('Max requests: ' + str(self.func_properties[request.path][MAX_REQUESTS_KEY_NAME]))
+                denied_request = 1
 
-                    print('Service is busy. Request has been denied.')
-                    abort(503, {'message': 'Service is busy, please try again later.'})
-                else:
-                    self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + request.path, 0)
+                print('Service is busy. Request has been denied.')
+                abort(503, {'message': 'Service is busy, please try again later.'})
+
+            if (disable_request_metric == 'False'):
+                self.log.track_metric(APP_INSIGHTS_REQUESTS_KEY_NAME + request.path, denied_request)
 
     def increment_requests(self, api_path):
         self.func_request_counts[self.api_prefix + api_path] += 1

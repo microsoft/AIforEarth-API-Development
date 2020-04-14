@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/aiforearth/base-py:1.9
+FROM mcr.microsoft.com/aiforearth/base-py:1.12
+
 #############################################################################################
 # Add support for mounting an Azure blob
 # Add the Microsoft package repository and install blobfuse
