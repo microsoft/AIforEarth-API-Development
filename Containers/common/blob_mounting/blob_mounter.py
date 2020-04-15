@@ -40,5 +40,5 @@ with open('/app/fuse/blob_mount.json') as f:
             execute_bash(fuze_mount_cmd)
 
     except:
-        print("Unexpected error during blob mounting:", str(sys.exc_info()[0]))
+        print("Unexpected error during blob mounting")
         raise

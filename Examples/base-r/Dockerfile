@@ -1,8 +1,7 @@
-#FROM mcr.microsoft.com/aiforearth/base-r:latest
-FROM mcr.microsoft.com/aiforearth/base-r:1.5
+FROM mcr.microsoft.com/aiforearth/base-r:1.6
 
 # Install some addtional R packages
-RUN R -e 'install.packages("raster"); library(raster)'  
+#RUN R -e 'install.packages("raster"); library(raster)'
 RUN R -e 'print(installed.packages());'
 
 # Note: supervisor.conf reflects the location and name of your api code.

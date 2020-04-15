@@ -63,10 +63,9 @@ RUN apt-get update \
   && ln -s /usr/bin/python3 python \
   && pip3 install --upgrade pip
   
-# Install Azure Blob SDK
-RUN pip3 install azure-mgmt-storage \
-        azure-storage-blob \
-        azure-identity
+COPY ./base-py/requirements.txt /ai4e_api_tools/
+WORKDIR /ai4e_api_tools
+RUN pip3 install -r ./requirements.txt
 
 COPY ./base-r/ai4e_api_tools /ai4e_api_tools/
 COPY ./common/sas_blob.py /ai4e_api_tools/

@@ -237,11 +237,6 @@ Each decorator contains the following parameters:
 - [Instrumentation key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-create-new-resource)
 
 The instrumentation key is for general logging and tracing.  This is found under the "Properties" section for your Application Insights instance in the Azure portal.
-- [Live stream key](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-live-stream#sdk-requirements)
-
-The live stream key is used for traces and allows you to visualize a live stream of events within the Application Insights Azure Portal.
-
-To generate these, first create a new instance of Application Insights from the [Azure portal](https://portal.azure.com) by clicking "Create a resource" from the left menu and searching for Application Insights.
 
 ![Search for App Insights](Examples/screenshots/app_insights1.PNG)
 
@@ -261,30 +256,12 @@ Next, create a Live Metrics API key. Scroll down in the left menu to find API Ac
 
 Copy and store both of these keys in a safe place.   
 
-
-### Edit LocalForwarder.config
-If you are using a Python-based image and would like to take advantage of tracing metrics, you will need to modify the LocalForwarder.config file by adding your Application Insights instrumentation and live stream keys.  There are three areas where you need to add your keys (be sure to add the proper key in the right place as shown below - you will use your instrumentation key twice and your live metrics key once):
-```Xml
-  <OpenCensusToApplicationInsights>
-    <InstrumentationKey>your_instrumentation_key_goes_here</InstrumentationKey>
-  </OpenCensusToApplicationInsights>
-  <ApplicationInsights>
-    <LiveMetricsStreamInstrumentationKey>your_instrumentation_key_goes_here</LiveMetricsStreamInstrumentationKey>
-    <LiveMetricsStreamAuthenticationApiKey>your_api_key_goes_here</LiveMetricsStreamAuthenticationApiKey>
-    ...
-  </ApplicationInsights>
-```
-
 ## Install required packages
 Now, let's look at the Dockerfile in your code.  Update the Dockerfile to install any required packages. There are several ways to install packages.  We cover popular ones here:
 - pip
 ```Dockerfile
 RUN /usr/local/envs/ai4e_py_api/bin/pip install grpcio opencensus
 ```
-- Anaconda
-```Dockerfile
-RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
-    && conda install -c conda-forge -n ai4e_py_api numpy pandas
 ```
 
 - apt-get
@@ -301,7 +278,6 @@ The Dockerfile also contains several environment variables that should be set fo
 ```Dockerfile
 # Application Insights keys and trace configuration
 ENV APPINSIGHTS_INSTRUMENTATIONKEY=your_instrumentation_key_goes_here \
-    APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY=your_api_key_goes_here \
     LOCALAPPDATA=/app_insights_data \
     OCAGENT_TRACE_EXPORTER_ENDPOINT=localhost:55678
 

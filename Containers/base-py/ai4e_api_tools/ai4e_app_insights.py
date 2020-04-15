@@ -107,8 +107,9 @@ class AppInsights(object):
         else:
             self._appinsights_key = None
 
+        # Set the application insights key for production use.
         if self._appinsights_key:
-            print("Grantee application insights key set.")
+            print("Application insights key set.")
 
         self._endpoint_uri = app.config.get(CONF_ENDPOINT_URI)
 

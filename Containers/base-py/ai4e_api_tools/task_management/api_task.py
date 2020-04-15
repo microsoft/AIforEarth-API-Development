@@ -29,7 +29,7 @@ class TaskManager:
         status = {}
         status['TaskId'] = id
         status['Status'] = 'created'
-        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y-%m-%d %H:%M:%S")
         status['Endpoint'] = request.path
 
         statuses.append(status)
@@ -40,16 +40,25 @@ class TaskManager:
         return(status)
 
     def UpdateTaskStatus(self, taskId, status):
+        if (not os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
+
         statuses = []
 
         with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
             statuses = json.load(f)
             f.close()
 
+        task_status = None
         for rec_status in statuses:
             if (rec_status['TaskId'] == taskId):
-                rec_status['Status'] = status
-                rec_status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+                task_status = rec_status
+
+        if (task_status is None):
+            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
+        else:
+            rec_status['Status'] = status
+            rec_status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
 
         with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
             json.dump(statuses, f)
@@ -85,9 +94,10 @@ class TaskManager:
                 for rec_status in statuses:
                     if (rec_status['TaskId'] == taskId):
                         return rec_status
+
         status = {}
         status['TaskId'] = taskId
-        status['Status'] = 'created'
+        status['Status'] = 'Not found.'
         status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
         status['Endpoint'] = ''
         return status

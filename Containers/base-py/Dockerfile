@@ -30,10 +30,9 @@ RUN apt-get update --fix-missing \
 
 RUN easy_install3 pip
 
-# Install hosting requirements
-RUN pip3 install flask \
-        flask-restful \
-        gunicorn
+COPY ./base-py/requirements.txt /ai4e_api_tools/
+WORKDIR /ai4e_api_tools
+RUN pip3 install -r ./requirements.txt
 
 # Install Azure Blob SDK
 RUN pip3 install azure-mgmt-storage \
