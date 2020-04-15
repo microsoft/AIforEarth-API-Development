@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+library(httr)
+library(ids)
+
 AddTask<-function(req){
-  taskId = 1
+  taskId = uuid()
 
   newTask <- data.frame(
     TaskId = taskId,
@@ -12,12 +15,7 @@ AddTask<-function(req){
 
   if (file.exists("tasks.csv")) {
     print("file exists")
-    tasks<-read.csv("tasks.csv", stringsAsFactors=FALSE)
-
-    lastId <- tail(tasks, 1)[,1]
-    taskId = lastId + 1
-    newTask$TaskId <- taskId
-    
+    tasks<-read.csv("tasks.csv", stringsAsFactors=FALSE)    
     write.csv(rbind(tasks, newTask), "tasks.csv", row.names=FALSE)
   }
   else {
@@ -60,9 +58,28 @@ FailTask<-function(taskId, status){
 }
 
 AddPipelineTask<-function(taskId, organization_moniker, version, api_name, body) {
-    next_url = paste(organization_moniker, version, api_name, sep = "/")
-    UpdateTaskStatus(taskId, paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
-    return(paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+    next_url <- paste(version, organization_moniker, api_name, sep = "/")
+
+    host <- Sys.getenv("LOCAL_NEXT_API_HOST_IN_PIPELINE")
+
+    if (!is.empty(host)) {
+      next_url <- paste(host, next_url, sep = "/")
+    }
+
+    tryCatch({
+      res <- POST(next_url, body=body)
+
+      if (status_code(r) != 200) {
+        UpdateTaskStatus(taskId, paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+        return(paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+      }
+    }, error = function(err) {
+        print(err)
+        UpdateTaskStatus(taskId, paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+        return(paste0("Pipelining is not supported in a single node deployment, but the next service is: ", next_url))
+    })
+
+    return(res)
 }
 
 #* Get status of task by id

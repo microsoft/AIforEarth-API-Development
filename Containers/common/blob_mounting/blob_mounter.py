@@ -33,7 +33,6 @@ with open('/app/fuse/blob_mount.json') as f:
             resource_dir = "/mnt/resource/blobfusetmp/" + base_dir
 
             os.makedirs(resource_dir)
-            shutil.chown(resource_dir, "root")
             os.chmod(fuse_cfg_file, 700)
             os.makedirs(cfg["mappedDirectory"])
 
@@ -41,5 +40,5 @@ with open('/app/fuse/blob_mount.json') as f:
             execute_bash(fuze_mount_cmd)
 
     except:
-        print("Unexpected error during blob mounting:", str(sys.exc_info()[0]))
+        print("Unexpected error during blob mounting")
         raise

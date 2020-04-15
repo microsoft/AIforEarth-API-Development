@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/blob-py:latest
+FROM mcr.microsoft.com/aiforearth/blob-py:1.3
 
 # Copy blob connection information
 COPY ./blob_mount.json /app/fuse/blob_mount.json

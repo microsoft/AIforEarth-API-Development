@@ -48,7 +48,7 @@ def post(*args, **kwargs):
     #   - timestamp
     #   - endpoint: passed via the TaskManager constructor
 
-    filename = "config.csv"
+    filename = "<filename>"
     data_path = os.path.join(blob_mapped_dir, filename)
     with open(data_path, "r") as file_from_blob:
         return "Blob file contents: " + file_from_blob.read()

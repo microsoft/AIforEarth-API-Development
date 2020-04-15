@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 #mcr.microsoft.com/aiforearth/base-r:version
 FROM osgeo/gdal:ubuntu-full-3.0.3
 ARG DEBIAN_FRONTEND=noninteractive
@@ -52,6 +54,8 @@ RUN Rscript -e 'install.packages("devtools");'
 RUN Rscript -e 'install.packages("RCurl");'
 RUN Rscript -e 'install.packages("sjmisc");'
 RUN Rscript -e 'install.packages("reticulate");'
+RUN Rscript -e 'install.packages("urltools");'
+RUN Rscript -e 'install.packages("ids");'
 
 RUN apt-get update \
   && apt-get install -y python3-pip python3-dev \
@@ -59,12 +63,9 @@ RUN apt-get update \
   && ln -s /usr/bin/python3 python \
   && pip3 install --upgrade pip
   
-# Install Azure Blob SDK and application insights
-RUN pip install azure
-RUN pip install azure-storage-common
-RUN pip install azure-storage-blob
-RUN pip install adal
-RUN pip install applicationinsights
+COPY ./base-py/requirements.txt /ai4e_api_tools/
+WORKDIR /ai4e_api_tools
+RUN pip3 install -r ./requirements.txt
 
 COPY ./base-r/ai4e_api_tools /ai4e_api_tools/
 COPY ./common/sas_blob.py /ai4e_api_tools/

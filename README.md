@@ -1,5 +1,16 @@
 # AI for Earth - Creating APIs
-These images and examples are meant to illustrate how to build containers for use in the AI for Earth API system.
+These images and examples are meant to illustrate how to build containers for use in the AI for Earth API system. The following images and tags (versions/images) are available on Dockerhub:
+- [mcr.microsoft.com/aiforearth/base-py](https://hub.docker.com/_/microsoft-aiforearth-base-py)
+    - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/base-py/tags/list)
+
+- [mcr.microsoft.com/aiforearth/blob-r](https://hub.docker.com/_/microsoft-aiforearth-blob-r)
+    - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/blob-r/tags/list)
+
+- [mcr.microsoft.com/aiforearth/blob-py](https://hub.docker.com/_/microsoft-aiforearth-blob-python)
+    - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/blob-python/tags/list)
+
+- [mcr.microsoft.com/aiforearth/base-r](https://hub.docker.com/_/microsoft-aiforearth-base-r)
+    - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/base-r/tags/list)
 
 ## Notice
 Additional to a running docker environment, GPU images require [NVIDIA Docker](https://github.com/nvidia/nvidia-docker) package to support CUDA.
@@ -21,30 +32,13 @@ To view the license for cuDNN included in the cuda base image, click [here](http
 ## Repo Layout
 - Containers
     - base-py [Base AI for Earth Python image]
-        - nvidia/cuda:9.2 ubuntu 16.04 base
-        - supervisor
-        - miniconda3 4.5.4
-        - Python 3.6.6
-        - uwsgi
-        - flask and flask-restful
-        - azure-storage-blob
-        - applicationinsights
-        - AI for Earth task management tools
-        - AI for Earth Azure SAS Blob tools
+        - API hosting libraries
+        - Azure Blob libraries
+        - Monitoring libraries
     - base-r [Base AI for Earth R image]
-        - nvidia/cuda:9.2 ubuntu 16.04 base
-        - supervisor
-        - Python 3
-        - Microsoft R Open 3.4.3
-        - sp
-        - gdal
-        - plumber
-        - future
-        - reticulate
-        - azure-storage-blob
-        - applicationinsights
-        - AI for Earth task management tools
-        - AI for Earth Azure SAS Blob tools
+        - API hosting libraries
+        - Azure Blob libraries
+        - Monitoring libraries
     - blob-py [Base AI for Earth Python image with Azure Blob mounting tools]
         - AI for Earth base-py base
         - AI for Earth Azure Blob mounting tools
@@ -72,10 +66,9 @@ To demonstrate how easy it is to run an API service in Azure, we'll explore the 
 
 ### Orientation
 Under the `examples/base-py` directory, we find these objects:
-- [my_api](./examples/base-py/my_api) folder [Contains the API service files.]
-    - [runserver.py](./examples/base-py/my_api/runserver.py) [Contains the sample API service code.]
+- [my_api](./examples/base-py) folder [Contains the API service files.]
+    - [runserver.py](./examples/base-py/runserver.py) [Contains the sample API service code.]
 - [Dockerfile](./examples/base-py/Dockerfile) [A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. This Dockerfile contains all the commands needed to run the example API service.]
-- [LocalForwarder.config](./examples/base-py/LocalForwarder.config) [Application Insights tracing configuration. Replace your_key_goes_here with your actual key.]
 - [startup.sh](./examples/base-py/startup.sh) [A simple bash script that is used as the service's entrypoint. We use a bash script as it allows us to easily run other required commands without having to expand the Dockerfile. See the blob-mount-py/startup.sh as an expanded example.]
 - [supervisor.conf](./examples/base-py/supervisor.conf) [We use supervisor as our process control system. If your API service crashes, etc., supervisor will restart it for you. supervisor.conf holds the configuration necessary to execute supervisord, in the context of your API service.]
 
@@ -87,40 +80,39 @@ If you are unfamiliar with Docker or container technologies, we encourage you to
 Dockerfile walkthrough:
 
 ```Dockerfile 
-FROM mcr.microsoft.com/aiforearth/base-py:latest
+FROM mcr.microsoft.com/aiforearth/base-py:1.11
 ```
 - The very first line of our Dockerfile describes the base image, upon which we'll build our API service environment. In general, you may use any base image you would like, but if you wish to be considered as an AI For Earth API, you must use one of the official AI for Earth base images.  If you find that the provided base images are not sufficient, please connect with us so we may expand our offerings.
-```Dockerfile 
-RUN echo "source activate ai4e_py_api" >> ~/.bashrc \
-    && conda install -c conda-forge -n ai4e_py_api numpy pandas
-```
-- All of the default packages have been installed within the Anaconda virtual environment: ai4e_py_api. Any additional necessary packages should be installed within this environment. This example demonstrates how to install numpy and pandas from the conda-forge package repository.
 
 ```Dockerfile
-COPY ./my_api /app/my_api/
+COPY ./ /app/my_api/
 COPY ./supervisord.conf /etc/supervisord.conf
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
-
-COPY ./LocalForwarder.config /lf/
 ```
 - Copy the API service directory into the container (your API service code will be placed in the `/app/my_api` directory).
 - Copy the supervisor configuration file to the proper location.
 - Copy the `startup.sh` bash script and add execute permission to it.
 
 ```Dockerfile 
-ENV APPINSIGHTS_INSTRUMENTATIONKEY ''
-ENV APPINSIGHTS_LIVEMETRICSSTREAMAUTHENTICATIONAPIKEY  ''
-ENV LOCALAPPDATA '/app_insights_data'
-ENV OCAGENT_TRACE_EXPORTER_ENDPOINT 'localhost:55678'
-ENV SERVICE_OWNER "AI4E_Test"
-ENV SERVICE_CLUSTER "Local Docker"
-ENV SERVICE_MODEL_NAME "base-py example"
-ENV SERVICE_MODEL_FRAMEWORK "Python"
-ENV SERVICE_MODEL_FRAMEOWRK_VERSION "3.6.6"
-ENV SERVICE_MODEL_VERSION "1.0"
+ENV APPINSIGHTS_INSTRUMENTATIONKEY= \
+    TRACE_SAMPLING_RATE=1.0
+
+ENV SERVICE_OWNER=AI4E_Test \
+    SERVICE_CLUSTER=Local\ Docker \
+    SERVICE_MODEL_NAME=base-py\ example \
+    SERVICE_MODEL_FRAMEWORK=Python \
+    SERVICE_MODEL_FRAMEOWRK_VERSION=3.7 \
+    ENVSERVICE_MODEL_VERSION=1.0 \
+    DISABLE_CURRENT_REQUEST_METRIC=False
 ```
 - All logging and metric collection flows through Application Insights. Set the APPINSIGHTS_INSTRUMENTATIONKEY environment variable to your instrumentation key. This is required when offering an official AI for Earth API, but is highly suggested otherwise. If you wish not to use Application Insights, you can safely remove this line.  All of the SERVICE_ prefixed environment variables offer logging filters within Application Insights.
+- Set DISABLE_CURRENT_REQUEST_METRIC to True if you would like not record endpoint request denials.
+
+```Dockerfile
+ENV API_PREFIX=/v1/my_api/tasker
+```
+- Add a  URL prefix that your API will use.
 
 ```Dockerfile
 HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
@@ -129,16 +121,11 @@ HEALTHCHECK --interval=1m --timeout=3s --start-period=20s \
 - The HEALTHCHECK will make a request to the / endpoint to ensure that the service is running. This is used by Docker to determine if the service is healthy.
 
 ```Dockerfile
-EXPOSE 80
+EXPOSE 1212
 ENTRYPOINT [ "/startup.sh" ]
 ```
 - Expose the port that you wish to use to call your API.
 - Specify the entrypoint, or the file to execute when starting the container.
-
-```Dockerfile
-ENV API_PREFIX=/v1/my_api/tasker
-```
-- Add a  URL prefix that your API will use.
 
 ### [supervisor.conf](./examples/base-py/supervisor.conf)
 The supervisor.conf file contains a number of lines, but there are two that are important to execute your API service code.
@@ -147,111 +134,17 @@ The supervisor.conf file contains a number of lines, but there are two that are 
 - If you modify the Dockerfile to place your code in a different directory than /app/my_api/, you must change it here.
 
 Next, we look at the "command" specification.  This is a single line, but we'll break it apart for exploration. We example the important parts of the command, below:
-`/usr/local/envs/ai4e_py_api/bin/uwsgi`
-- uwsgi is used as our application server.  We point to its executable as the command. If you change the Anaconda virtual environment, you must change this line.
+`gunicorn`
+- gunicorn is used as our application server.  We point to its executable as the command.
 
- `--virtualenv /usr/local/envs/ai4e_py_api`
- - Anaconda virtual environment declaration.
+ `--workers 4`
+ - The number of application server worker instances to run.
 
-`--callable app`
-- This your application name. Default is "app".
-
-`--http 0.0.0.0:80`
-- Specifices which port to use. Your API service will listen to this port. This port must be exposed in your Dockerfile.
-
-`--wsgi-file /app/my_api/runserver.py`
+`runserver:app`
 - This is the location file in your API service code that contains your 'app' definition: `app = Flask(__name__)`
 
 ### [runserver.py](./examples/base-py/my_api/runserver.py)
-This is an example entrypoint to an API service. We explore the important lines, below:
-```Python
-from ai4e_service import AI4EService
-```
-- The AI for Earth api toolset contains service (AI4EService) wrapper that includes:
-    - A task manager for use in long-running/async APIs services. The task manager stores state within the container, itself. Therefore, it is not a production-ready task manager. The task manager has been designed, however, to be directly pluggable into AI for Earth's distributed task manager. If you are designing your API for eventual adoption into the AI for Earth official APIs, utilizing this task manager will allow you to test your API and allow you to migrate to the AI for Earth distributed architecure without any code changes.
-    - An integrated health check endpoint for Docker to determine the health of the service.
-    - A request validation function that is called on each request, before your code is called. This function checks to ensure that the service is not being terminated, that the max connections has not been reached, that the content type in the request is expected, and that the request size doesn't exceed the max request size. If any of these conditions are discovered, a 503 will be sent to the caller.
-    - Two aspect-oriented function wrappers: async and sync, which, when applied to your function, turns the function into a callable API.
-
-```Python
-from ai4e_app_insights_wrapper import AI4EAppInsights
-```
-- We have built a wrapper around the Application Insights Python API that allows us to quickly adopt your APIs into our official API platform (without any code changes). If you wish to explore this option, please use this wrapper.
-
-```Python
-log = AI4EAppInsights()
-```
-- Initialize the AI for Earth Application Insights class, which you will use to send log messages to Application Insights.
-
-```Python
-with app.app_context():
-    ai4e_service = AI4EService(app, log)
-```
-- Creates the AI4EService, which we defined above.
-
-```Python
-def process_request_data(request):
-    return_values = {'data': None}
-    try:
-        # Attempt to load the body
-        return_values['data'] = request.data
-    except:
-        log.log_error('Unable to load the request data')   # Log to Application Insights
-    return return_values
-```
-- This is a request data processing function, which is run before your model code. Use this function to validate any input and to assign the input data to a dictionary.
-
-```Python
-def run_model(taskId, body):
-    # Update the task status, so the caller knows it has been accepted and is running.
-    ai4e_service.api_task_manager.UpdateTaskStatus(taskId, 'running model')
-
-    log.log_debug('Running model', taskId) # Log to Application Insights
-    #INSERT_YOUR_MODEL_CALL_HERE
-    sleep(10)  # replace with real code
-```
-- This is the method that actually runs your service code. Notice that we wrap the "real code" section with status updates. This allows the user to request status updates from the task GET endpoint - included via AI for Earth task management.
-
-```Python
-@ai4e_service.api_async_func(
-    api_path = '/', 
-    methods = ['POST'], 
-    request_processing_function = process_request_data, # This is the data process function that you created above.
-    maximum_concurrent_requests = 5, # If the number of requests exceed this limit, a 503 is returned to the caller.
-    content_types = ['application/json'],
-    content_max_length = 1000, # In bytes
-    trace_name = 'post:my_long_running_funct')
-def default_post(*args, **kwargs):
-    # Since this is an async function, we need to keep the task updated.
-    taskId = kwargs.get('taskId')
-    log.log_debug('Started task', taskId) # Log to Application Insights
-
-    # Get the data from the dictionary key that you assigned in your process_request_data function.
-    request_data = kwargs.get('data')
-
-    if not request_data:
-        ai4e_service.api_task_manager.FailTask(taskId, 'Task failed - Body was empty or could not be parsed.')
-        return -1
-
-    # Load the request data into JSON format.
-    request_json = json.loads(request_data)
-
-    # Run your model function
-    run_model(taskId, request_json)
-
-    # Once complete, ensure the status is updated.
-    log.log_debug('Completed task', taskId) # Log to Application Insights
-    # Update the task with a completion event.
-    ai4e_service.api_task_manager.CompleteTask(taskId, 'completed')
-```
-- Set up a POST, long-running, endpoint for your API. 
-
-```Python
-@ai4e_service.api_sync_func(api_path = '/echo/<string:text>', methods = ['GET'], maximum_concurrent_requests = 1000, trace_name = 'get:echo', kwargs = {'text'})
-def echo(*args, **kwargs):
-    return 'Echo: ' + kwargs['text']
-```
-- Set up a GET, sync endpoint.
+This is an main file that details your API service.
 
 ## Step 3: Run a service locally
 Now that you have your container code completed, we can build your container and run it locally.

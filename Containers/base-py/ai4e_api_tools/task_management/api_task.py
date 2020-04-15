@@ -1,41 +1,84 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import random, datetime
+import datetime
+import os
+import requests
+import uuid
+import json
 
 print("Creating task manager.")
+
+LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '.')
 
 class TaskManager:
     def __init__(self):
         self.status_dict = {}
 
     def GetTaskId(self):
-        id = str(random.randint(1, 10000))
-        while id in self.status_dict:
-            id = str(random.randint(1, 10000))
-        return id
+        return str(uuid.uuid4())
 
     def AddTask(self, request):
-        id = self.GetTaskId()        
-        self.status_dict[id] = ('created', datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"), 'task')
+        id = self.GetTaskId()
 
-        ret = {}
-        ret['TaskId'] = id
-        ret['Status'] = self.status_dict[id][0]
-        ret['Timestamp'] = self.status_dict[id][1]
-        ret['Endpoint'] = self.status_dict[id][2]
-        return(ret)
+        statuses = []
+        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+                statuses = json.load(f)
+                f.close()
+
+        status = {}
+        status['TaskId'] = id
+        status['Status'] = 'created'
+        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y-%m-%d %H:%M:%S")
+        status['Endpoint'] = request.path
+
+        statuses.append(status)
+
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
+                json.dump(statuses, f)
+                f.close()
+        return(status)
 
     def UpdateTaskStatus(self, taskId, status):
-        if (taskId in self.status_dict):
-            stat = self.status_dict[taskId]
-            self.status_dict[taskId] = (status, stat[1], stat[2])
+        if (not os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
+
+        statuses = []
+
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+            statuses = json.load(f)
+            f.close()
+
+        task_status = None
+        for rec_status in statuses:
+            if (rec_status['TaskId'] == taskId):
+                task_status = rec_status
+
+        if (task_status is None):
+            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
         else:
-            self.status_dict[taskId] = (status, stat[1], stat[2])
+            rec_status['Status'] = status
+            rec_status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+
+        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
+            json.dump(statuses, f)
+            f.close()
 
     def AddPipelineTask(self, taskId, organization_moniker, version, api_name, body):
-        next_url = organization_moniker + '/' + version + '/' + api_name
-        self.UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
-        return "Pipelining is not supported in a single node deployment, but the next service is: " + next_url
+        next_url = version + '/' + organization_moniker + '/' + api_name
+
+        host = os.getenv('LOCAL_NEXT_API_HOST_IN_PIPELINE', '')
+
+        if len(host) > 0:
+            next_url = str(host) + '/' + str(next_url)
+
+        r = requests.post(next_url, data=body)
+
+        if r.status_code != 200:
+            ai4e_service.api_task_manager.UpdateTaskStatus(taskId, "Pipelining is not supported in a single node deployment, but the next service is: " + next_url)
+            return "Pipelining is not supported in a single node deployment, but the next service is: " + next_url
+        else:
+            return r.status_code
 
     def CompleteTask(self, taskId, status):
         self.UpdateTaskStatus(taskId, status)
@@ -44,10 +87,17 @@ class TaskManager:
         self.UpdateTaskStatus(taskId, status)
 
     def GetTaskStatus(self, taskId):
-        try:
-            if taskId in self.status_dict:
-                return self.status_dict[taskId]
-            else:
-                return "not found"
-        except:
-            print(sys.exc_info()[0])
+        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
+            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
+                statuses = json.load(f)
+
+                for rec_status in statuses:
+                    if (rec_status['TaskId'] == taskId):
+                        return rec_status
+
+        status = {}
+        status['TaskId'] = taskId
+        status['Status'] = 'Not found.'
+        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
+        status['Endpoint'] = ''
+        return status
