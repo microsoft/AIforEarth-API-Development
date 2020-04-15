@@ -38,7 +38,6 @@ To view the license for cuDNN included in the cuda base image, click [here](http
 
 ## Contents
 1. [Repo Layout](#repo-layout)
-2. [Quickstart](#Quickstart)
 3. [Quickstart Tutorial](#Quickstart-Tutorial)
    1. [Choose a base image or example](#Choose-a-base-image-or-example)
    2. [Insert code to call your model](#Insert-code-to-call-your-model)
