@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/base-py:latest
+FROM mcr.microsoft.com/aiforearth/base-py:1.13
 
 #############################################################################################
 # Add support for mounting an Azure blob

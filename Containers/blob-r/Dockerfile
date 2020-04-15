@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aiforearth/base-r:latest
+FROM mcr.microsoft.com/aiforearth/base-r:1.6
 
 #############################################################################################
 # Add support for mounting an Azure blob
