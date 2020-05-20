@@ -55,17 +55,24 @@ class AadBlob:
 
         return blob_service_client
 
+
+
+    
     # Write Blobs............................
     def _upload_managed_identity_blob(self, container, blob, data):
         token_credential = self._get_managed_identity_credential()
         
         blob_uri = self.get_blob_uri(container, blob)
 
-        headers = { 'Authorization': "Bearer " + token_credential,
+        headers = { 'Authorization': 'Bearer ' + token_credential,
                     'x-ms-version': '2019-07-07',
-                    'x-ms-date': formatdate(timeval=None, localtime=False, usegmt=True)}
+                    'x-ms-date': formatdate(timeval=None, localtime=False, usegmt=True),
+                    'x-ms-blob-type': 'BlockBlob',
+                    'Content-Length': str(len(data))}
 
-        return requests.put(blob_uri, headers=headers, data=data)
+        r = requests.put(blob_uri, headers=headers, data=data)
+        r.raise_for_status()
+        return r
 
     def _write_blob(self, container, blob, data):
         if self.credential_type is MANAGED_IDENTITY_CRED_TYPE:
@@ -126,8 +133,8 @@ class AadBlob:
 
         if self.credential_type is MANAGED_IDENTITY_CRED_TYPE:
             get_response = self._download_managed_identity_blob(container, blob)
-            #data = (get_response.text if encoding else get_response.content)
-            return get_response
+            data = (get_response.text if encoding else get_response.content)
+            return data
 
         else: # CLIENT_SECRET_CRED_TYPE:
             blob_service_client = self._get_blob_service_client()
@@ -139,8 +146,7 @@ class AadBlob:
         file_type = ('w' if encoding else 'wb')
         if self.credential_type is MANAGED_IDENTITY_CRED_TYPE:
             with open(local_file, file_type) as open_file:
-                get_response = self._get_blob(container, blob, encoding)
-                data = (get_response.text if encoding else get_response.content)
+                data = self._get_blob(container, blob, encoding)
                 open_file.write(data)
                 return str(get_response.headers)
                 
@@ -217,6 +223,7 @@ class AadBlob:
             txt = f.read()
             f.close()
             return txt
+
 
     # Helpers............................
     def does_blob_exist(self, container, blob):
