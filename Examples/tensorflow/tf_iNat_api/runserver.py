@@ -1,6 +1,7 @@
 # /ai4e_api_tools has been added to the PYTHONPATH, so we can reference those
 # libraries directly.
-from flask import Flask, request
+import json
+from flask import Flask, request, abort
 from ai4e_app_insights_wrapper import AI4EAppInsights
 from ai4e_service import APIService
 from sas_blob import SasBlob
