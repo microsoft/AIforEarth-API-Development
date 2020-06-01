@@ -7,7 +7,7 @@ These images and examples are meant to illustrate how to build containers for us
         - 1.13-cuda-9.0 - nvidia/cuda:9.0-runtime-ubuntu16.04
         - 1.13-cuda-9.0-devel - nvidia/cuda:9.0-devel-ubuntu16.04
     - The base-py image can be built using any Ubuntu image of your choice by building with the optional BASE_IMAGE build argument.
-        - Example of how to build with the CUDA 9.0 devel image (inside [Containers](.Containers)):
+        - Example of how to build with the CUDA 9.0 devel image (inside [Containers](./Containers)):
             - `docker build . -f base-py/Dockerfile -t base-py:1.13-cuda-9.0-devel --build-arg BASE_IMAGE=nvidia/cuda:9.0-devel-ubuntu16.04`
 
 - [mcr.microsoft.com/aiforearth/blob-py](https://hub.docker.com/_/microsoft-aiforearth-blob-python)
