@@ -7,8 +7,8 @@ These images and examples are meant to illustrate how to build containers for us
         - 1.13-cuda-9.0 - nvidia/cuda:9.0-runtime-ubuntu16.04
         - 1.13-cuda-9.0-devel - nvidia/cuda:9.0-devel-ubuntu16.04
     - The base-py image can be built using any Ubuntu image of your choice by building with the optional BASE_IMAGE build argument.
-        - Example of how to build with the CUDA 9.0 devel image:
-            - docker build . -f base-py/Dockerfile -t base-py:1.13-cuda-9.0-devel --build-arg BASE_IMAGE=nvidia/cuda:9.0-devel-ubuntu16.04
+        - Example of how to build with the CUDA 9.0 devel image (inside [Containers](.Containers)):
+            - `docker build . -f base-py/Dockerfile -t base-py:1.13-cuda-9.0-devel --build-arg BASE_IMAGE=nvidia/cuda:9.0-devel-ubuntu16.04`
 
 - [mcr.microsoft.com/aiforearth/blob-py](https://hub.docker.com/_/microsoft-aiforearth-blob-python)
     - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/blob-python/tags/list)
@@ -38,8 +38,7 @@ To view the license for cuDNN included in the cuda base image, click [here](http
 
 ## Contents
 1. [Repo Layout](#repo-layout)
-2. [Quickstart](#Quickstart)
-3. [Quickstart Tutorial](#Quickstart-Tutorial)
+2. [Quickstart Tutorial](#Quickstart-Tutorial)
    1. [Choose a base image or example](#Choose-a-base-image-or-example)
    2. [Insert code to call your model](#Insert-code-to-call-your-model)
    3. [Input handling](#Input-handling)
@@ -53,7 +52,7 @@ To view the license for cuDNN included in the cuda base image, click [here](http
    11. [Publish to Azure Container Registry](#Publish-to-Azure-Container-Registry)
    12. [Run your container in ACI](#Run-your-container-in-ACI)
    13. [FAQs](#FAQs)
-4. [Contributing](#Contributing)
+3. [Contributing](#Contributing)
 
 ## Repo Layout
 - Containers
@@ -118,18 +117,19 @@ AI for Earth APIs are all built from an AI for Earth base image.  You may use a 
 In general, if you're using Python, you will want to use an image or example with the base-py or blob-py images.  If you are using R, you will want to use an image or example with the base-r or blob-r images.  The difference between them: the blob-* image contains everything that the cooresponding base-* image contains, plus additional support for mounting [Azure blob storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).  This may be useful if you need to process (for example) a batch of images all at once; you can upload them all to Azure blob storage, the container in which your model is running can mount that storage, and access it like it is local storage.  
 
 ## Asynchronous (async) vs. Synchronous (sync) Endpoint
-In addition to your language choice, you should think about whether your API call should be synchronous or asynchronous.  A synchronous API call will invoke your model, get results, and return immediately.  This is a good paradigm to use if you want to perform classification with your model on a single image, for example.  An asynchronous API call should be used for long-running tasks, like processing a whole folder of images, performing object detection on each image with your model, and storing the results.  
+In addition to your language choice, think about whether your API call should be synchronous or asynchronous. 
+- A synchronous API call will invoke your model, get results, and return immediately. This is a good paradigm to use if you want to perform classification with your model on a single image, for example. 
+- An asynchronous API call should be used for long-running tasks, like processing a whole folder of images using your model and storing the results, or constructing a forecasting model from historical data that the user provides.
  
 ### Asynchronous Implementation Examples
 The following examples demonstrate async endpoints:
-- [base-py](./Examples/base-py/runserver.py)'s / endpoint
+- [base-py](./Examples/base-py/runserver.py)'s `example` endpoint
 - [base-r](./Examples/base-r/my_api/api_example.R)
 - [tensorflow](./Examples/tensorflow/tf_iNat_api/runserver.py)
  
 ### Synchronous Implementation Examples
 The following examples demonstrate sync endpoints:
-- [base-py](./Examples/base-py/runserver.py)'s echo endpoint
-- [customvision-sample](./Examples/customvision-sample/custom_vision_api/runserver.py)
+- [base-py](./Examples/base-py/runserver.py)'s `echo` endpoint
 - [pytorch](./Examples/pytorch/pytorch_api/runserver.py)
 
 ## Input/Output Patterns
@@ -141,18 +141,18 @@ While input patterns can be used for sync or async designs, your output design i
 
 #### Binary Input
 Many applications of AI apply models to image/binary inputs. Here are some approaches:
-- Send the image directly via request data. See the [tensorflow](./examples/tensorflow/tf_iNat_api/runserver.py) example to see how it is accomplished.
+- Send the image directly via request data. See the [tensorflow](./Examples/tensorflow/tf_iNat_api/runserver.py) example to see how it is accomplished.
 - Upload your binary input to an Azure Blob, create a [SAS key](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1), and add a JSON field for it.
 - If you would like users to use your own Azure blob storage, we provide tools to [mount blobs as local drives](https://github.com/Azure/azure-storage-fuse) within your service. You may then use this virtual file system, locally.
 - Serializing your payload is a very efficient method for transmission. [BSON](http://bsonspec.org/) is an open standard, bin­ary-en­coded serialization for such purposes.
 
 ### Asynchronous Pattern
-The preferred way of handling asynchronous API calls is to provide a task status endpoint to your users. When a request is submitted, a new taskId is immediately returned to the caller to track the status of their request as it is processed.
+The preferred way of handling asynchronous API calls is to provide a task status endpoint to your users. When a request is submitted, a new `taskId` is immediately returned to the caller to track the status of their request as it is processed.
 
 We have several tools to help with task tracking that you can use for local development and testing. These tools create a database within the service instance and are not recommended for production use.
 
 Once a task is completed, the user needs to retrieve the result of their service call. This can be accomplished in several ways:
-- Return a SAS-keyed URL to an Azure Blob Container via a call to the task endpoint.
+- Return a SAS-keyed URL to an Azure Blob Container via a call to the `task` endpoint.
 - Request that a writable SAS-keyed URL is provided as input to your API call. Indicate completion via the task interface and write the output to that URL.
 - If you would like users to use your own Azure blob storage, you can write directly to a virtually-mounted drive.
 
@@ -291,7 +291,7 @@ Each decorator contains the following parameters:
 - ```maximum_concurrent_requests = 5```: If the number of requests exceed this limit, a 503 is returned to the caller.
 - ```content_types = ['application/json']```: An array of accepted content types. If the requested type is not found in the array, a 503 will be returned.
 - ```content_max_length = 1000```: The maximum length of the request data (in bytes) permitted. If the length of the data exceeds this setting, a 503 will be returned.
--```trace_name = 'post:my_long_running_funct'```: A trace name to associate with this function. This allows you to search logs and metrics for this particular function.
+- ```trace_name = 'post:my_long_running_funct'```: A trace name to associate with this function. This allows you to search logs and metrics for this particular function.
 
 ## Create AppInsights instrumentation keys
 [Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-overview) is an Azure service for application performance management.  We have integrated with Application Insights to provide advanced monitoring capabilities.  You will need to generate both an Instrumentation key and an API key to use in your application.
@@ -323,7 +323,6 @@ Now, let's look at the Dockerfile in your code.  Update the Dockerfile to instal
 - pip
 ```Dockerfile
 RUN /usr/local/envs/ai4e_py_api/bin/pip install grpcio opencensus
-```
 ```
 
 - apt-get
@@ -410,7 +409,7 @@ In the above command, the -p switch designates the local port mapping to the con
 ```Dockerfile
 EXPOSE 80
 ```
-TIP: Depending on your git settings and your operating system, the "docker run" command may fail with the error 'standard_init_linux.go:190: exec user process caused "no such file or directory"'.  If this happens, you need to change the end-of-line characters in startup.sh to LF.  One way to do this is using VS Code; open the startup.sh file and click on CRLF in the bottom right corner in the blue bar and select LF instead, then save.
+TIP: Depending on your git settings and your operating system, the "docker run" command may fail with the error `standard_init_linux.go:190: exec user process caused "no such file or directory"`.  If this happens, you need to change the end-of-line characters in startup.sh to LF.  One way to do this is using VS Code; open the startup.sh file and click on CRLF in the bottom right corner in the blue bar and select LF instead, then save.
 
 If you find that there are errors and you need to go back and rebuild your docker container, run the following commands:
 ```Bash
