@@ -3,6 +3,7 @@
 from threading import Thread
 from os import getenv
 import json
+import traceback
 
 from flask import Flask, abort, request, current_app, views
 from flask_restful import Resource, Api
@@ -20,7 +21,7 @@ from opencensus.ext.flask.flask_middleware import FlaskMiddleware
 disable_request_metric = getenv('DISABLE_CURRENT_REQUEST_METRIC', 'False')
 
 MAX_REQUESTS_KEY_NAME = 'max_requests'
-CONTENT_TYPE_KEY_NAME = 'content_type'
+CONTENT_TYPE_KEY_NAME = 'content_types'
 CONTENT_MAX_KEY_NAME = 'content_max_length'
 
 APP_INSIGHTS_REQUESTS_KEY_NAME = 'REJECTED_STATE'
@@ -55,7 +56,7 @@ class APIService():
         print("Adding url rule: " + self.api_prefix + '/task/<int:taskId>')
 
         if getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
-            azure_exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')))
+            azure_exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')), timeout=getenv('APPINSIGHTS_TIMEOUT', 30.0))
 
             sampling_rate = getenv('TRACE_SAMPLING_RATE', None)
             if not sampling_rate:
@@ -68,7 +69,7 @@ class APIService():
             )
 
             self.tracer = Tracer(
-                exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY'))),
+                exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')), timeout=getenv('APPINSIGHTS_TIMEOUT', 30.0)),
                 sampler=ProbabilitySampler(rate=float(sampling_rate)),
             )
 
@@ -93,7 +94,7 @@ class APIService():
                     combined_kwargs = {**internal_args, **kwargs, **return_values}
                 else:
                     combined_kwargs = {**internal_args, **kwargs}
-                
+
                 if is_async:
                     task_info = self.api_task_manager.AddTask(request)
                     taskId = str(task_info['TaskId'])
@@ -131,7 +132,7 @@ class APIService():
         if request.path in self.func_properties:
             if (self.func_properties[request.path][CONTENT_TYPE_KEY_NAME] and not request.content_type in self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]):
                 print('Invalid content type. Request has been denied.')
-                abort(401, {'message': 'Content-type must be ' + self.func_properties[request.path][CONTENT_TYPE_KEY_NAME]})
+                abort(401, {'message': 'Content-type must be ' + str(self.func_properties[request.path][CONTENT_TYPE_KEY_NAME])})
 
             if (self.func_properties[request.path][CONTENT_MAX_KEY_NAME] and request.content_length > self.func_properties[request.path][CONTENT_MAX_KEY_NAME]):
                 print('Request is too large. Request has been denied.')
@@ -183,15 +184,19 @@ class APIService():
         thread.start()
 
     def _log_and_fail_exeception(self, **kwargs):
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        ex_str = traceback.format_exception(exc_type, exc_value,exc_traceback)
+        print(ex_str)
+
         if ('taskId' in kwargs):
             taskId = kwargs['taskId']
             if taskId:
-                self.log.log_exception(sys.exc_info()[0], taskId)
-                self.api_task_manager.FailTask(taskId, 'Task failed - try again')
+                self.log.log_exception(ex_str)
+                self.api_task_manager.FailTask(taskId, 'Task failed - please contact support or try')
             else:
-                self.log.log_exception(sys.exc_info()[0])
+                self.log.log_exception(ex_str)
         else:
-            self.log.log_exception(sys.exc_info()[0])
+            self.log.log_exception(ex_str)
 
     def _execute_func_with_counter(self, *args, **kwargs):
         func = kwargs['func']
@@ -201,12 +206,8 @@ class APIService():
         try:
             r = func(*args, **kwargs)
             return r
-        except HTTPException as e:
-            self._log_and_fail_exeception(**kwargs)
-            return e
-        except:
-            print(sys.exc_info()[0])
-            self._log_and_fail_exeception(**kwargs)
+        except e:
+            self._log_and_fail_exeception(e)
             abort(500)
         finally:
             self.decrement_requests(api_path)
