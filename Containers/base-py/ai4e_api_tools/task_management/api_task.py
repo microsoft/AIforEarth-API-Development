@@ -1,68 +1,76 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import datetime
-import os
-import requests
-import uuid
+from datetime import datetime
 import json
+import os
+import threading
+from typing import Any, Dict
+import uuid
+
+import requests
+
 
 print("Creating task manager.")
 
 LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '.')
 
 class TaskManager:
+
+    # use a lock whenever we access task_status.json
+    task_status_json_lock = threading.Lock()
+
     def __init__(self):
         self.status_dict = {}
+        self.task_status_json_path = os.path.join(
+            LOCAL_BLOB_TEST_DIRECTORY, 'task_status.json')
 
-    def GetTaskId(self):
+    def GetTaskId(self) -> str:
         return str(uuid.uuid4())
 
     def AddTask(self, request):
-        id = self.GetTaskId()
+        status = {
+            'TaskId': self.GetTaskId(),
+            'Status': 'created',
+            'Timestamp': datetime.strftime(
+                datetime.utcnow(), "%Y-%m-%d %H:%M:%S"),
+            'Endpoint': request.path
+        }
 
-        statuses = []
-        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
-            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
-                statuses = json.load(f)
-                f.close()
+        with self.task_status_json_lock:
+            statuses = []
+            if os.path.isfile(self.task_status_json_path):
+                with open(self.task_status_json_path, 'r') as f:
+                    statuses = json.load(f)
+            statuses.append(status)
 
-        status = {}
-        status['TaskId'] = id
-        status['Status'] = 'created'
-        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y-%m-%d %H:%M:%S")
-        status['Endpoint'] = request.path
-
-        statuses.append(status)
-
-        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
+            with open(self.task_status_json_path, 'w') as f:
                 json.dump(statuses, f)
-                f.close()
-        return(status)
+        return status
 
-    def UpdateTaskStatus(self, taskId, status):
-        if (not os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
-            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
+    def UpdateTaskStatus(self, taskId: str, status: Any) -> None:
+        with self.task_status_json_lock:
+            if not os.path.isfile(self.task_status_json_path):
+                raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
 
-        statuses = []
+            statuses = []
+            with open(self.task_status_json_path, 'r') as f:
+                statuses = json.load(f)
 
-        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
-            statuses = json.load(f)
-            f.close()
+            task_status = None
+            for rec_status in statuses:
+                if rec_status['TaskId'] == taskId:
+                    task_status = rec_status
+                    break
 
-        task_status = None
-        for rec_status in statuses:
-            if (rec_status['TaskId'] == taskId):
-                task_status = rec_status
+            if task_status is None:
+                raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
+            else:
+                task_status['Status'] = status
+                task_status['Timestamp'] = datetime.strftime(
+                    datetime.utcnow(), "%Y-%m-%d %H:%M:%S")
 
-        if (task_status is None):
-            raise ValueError('taskId "{}" is not found. Decorate your endpoint with an ai4e_service decorator or call AddTask(request) before UpdateTaskStatus.'.format(taskId))
-        else:
-            rec_status['Status'] = status
-            rec_status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
-
-        with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'w') as f:
-            json.dump(statuses, f)
-            f.close()
+            with open(self.task_status_json_path, 'w') as f:
+                json.dump(statuses, f)
 
     def AddPipelineTask(self, taskId, organization_moniker, version, api_name, body):
         next_url = version + '/' + organization_moniker + '/' + api_name
@@ -86,18 +94,20 @@ class TaskManager:
     def FailTask(self, taskId, status):
         self.UpdateTaskStatus(taskId, status)
 
-    def GetTaskStatus(self, taskId):
-        if (os.path.isfile(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json')):
-            with open(LOCAL_BLOB_TEST_DIRECTORY + '/task_status.json', 'r') as f:
-                statuses = json.load(f)
+    def GetTaskStatus(self, taskId: str) -> Dict[str, Any]:
+        with self.task_status_json_lock:
+            if os.path.isfile(self.task_status_json_path):
+                with open(self.task_status_json_path, 'r') as f:
+                    statuses = json.load(f)
 
                 for rec_status in statuses:
-                    if (rec_status['TaskId'] == taskId):
+                    if rec_status['TaskId'] == taskId:
                         return rec_status
 
-        status = {}
-        status['TaskId'] = taskId
-        status['Status'] = 'Not found.'
-        status['Timestamp'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
-        status['Endpoint'] = ''
+        status = {
+            'TaskId': taskId,
+            'Status': 'Not found.',
+            'Timestamp': datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S"),
+            'Endpoint': ''
+        }
         return status
