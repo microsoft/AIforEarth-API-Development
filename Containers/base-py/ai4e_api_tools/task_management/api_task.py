@@ -3,7 +3,7 @@
 from datetime import datetime
 import json
 import os
-import threading
+import multiprocessing
 from typing import Any, Dict
 import uuid
 
@@ -17,7 +17,7 @@ LOCAL_BLOB_TEST_DIRECTORY = os.getenv('LOCAL_BLOB_TEST_DIRECTORY', '.')
 class TaskManager:
 
     # use a lock whenever we access task_status.json
-    task_status_json_lock = threading.Lock()
+    task_status_json_lock = multiprocessing.Lock()
 
     def __init__(self):
         self.status_dict = {}
