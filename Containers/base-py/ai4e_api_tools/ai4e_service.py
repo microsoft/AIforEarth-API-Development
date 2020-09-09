@@ -12,11 +12,7 @@ from task_management.api_task import TaskManager
 import sys
 from functools import wraps
 from werkzeug.exceptions import HTTPException
-
-from opencensus.trace.tracer import Tracer
-from opencensus.trace.samplers import ProbabilitySampler, AlwaysOnSampler
-from opencensus.ext.azure.trace_exporter import AzureExporter
-from opencensus.ext.flask.flask_middleware import FlaskMiddleware
+from ai4e_app_insights_wrapper import AI4EAppInsights
 
 disable_request_metric = getenv('DISABLE_CURRENT_REQUEST_METRIC', 'False')
 
@@ -43,7 +39,8 @@ class APIService():
         self.func_properties = {}
         self.func_request_counts = {}
         self.api_prefix = getenv('API_PREFIX')
-        self.tracer = None
+        if not isinstance(self.log, AI4EAppInsights):
+            self.tracer = self.log.tracer
         
         self.api_task_manager = TaskManager()
         signal.signal(signal.SIGINT, self.initialize_term)
@@ -54,24 +51,6 @@ class APIService():
         # Add task endpoint
         self.api.add_resource(Task, self.api_prefix + '/task/<id>', resource_class_kwargs={ 'task_manager': self.api_task_manager })
         print("Adding url rule: " + self.api_prefix + '/task/<int:taskId>')
-
-        if getenv('APPINSIGHTS_INSTRUMENTATIONKEY', None):
-            azure_exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')), timeout=getenv('APPINSIGHTS_TIMEOUT', 30.0))
-
-            sampling_rate = getenv('TRACE_SAMPLING_RATE', None)
-            if not sampling_rate:
-                sampling_rate = 1.0
-                
-            self.middleware = FlaskMiddleware(
-                self.app,
-                exporter=azure_exporter,
-                sampler=ProbabilitySampler(rate=float(sampling_rate)),
-            )
-
-            self.tracer = Tracer(
-                exporter=AzureExporter(connection_string='InstrumentationKey=' + str(getenv('APPINSIGHTS_INSTRUMENTATIONKEY')), timeout=getenv('APPINSIGHTS_TIMEOUT', 30.0)),
-                sampler=ProbabilitySampler(rate=float(sampling_rate)),
-            )
 
         self.app.before_request(self.before_request)
 
@@ -192,7 +171,7 @@ class APIService():
             taskId = kwargs['taskId']
             if taskId:
                 self.log.log_exception(ex_str)
-                self.api_task_manager.FailTask(taskId, 'Task failed - please contact support or try')
+                self.api_task_manager.FailTask(taskId, 'Task failed - please contact support or try again.')
             else:
                 self.log.log_exception(ex_str)
         else:
@@ -206,7 +185,7 @@ class APIService():
         try:
             r = func(*args, **kwargs)
             return r
-        except e:
+        except Exception as e:
             self._log_and_fail_exeception(e)
             abort(500)
         finally:

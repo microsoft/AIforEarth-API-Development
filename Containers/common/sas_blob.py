@@ -110,9 +110,6 @@ class SasBlob:
             open_file.write(download_stream.readall())
 
     def get_blob_sas_uri(self, container_sas_uri, blob_name):
-        container_client = ContainerClient.from_container_url(container_sas_uri)
-        blob_client = container_client.get_blob_client(blob_name)
-
         account_name = self.get_account_from_uri(container_sas_uri)
         container_name = self.get_container_from_uri(container_sas_uri)
         sas_key = self.get_sas_key_from_uri(container_sas_uri)

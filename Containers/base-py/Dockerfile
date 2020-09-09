@@ -21,7 +21,7 @@ RUN apt-get update --fix-missing \
         libxext6 \
         libsm6 \
         libxrender1 \
-        python3.7 \
+        python3.8 \
         python3-setuptools \
         python3-dev \
         apt-transport-https \
