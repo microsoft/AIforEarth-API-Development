@@ -10,7 +10,7 @@ from ai4e_service import APIService
 print('Creating Application')
 app = Flask(__name__)
 
-# Use the AI4EAppInsights library to send log messages. NOT REQURIED
+# Use the AI4EAppInsights library to send log messages. NOT REQUIRED
 log = AI4EAppInsights()
 
 # Use the APIService to executes your functions within a logging trace, supports long-running/async functions,

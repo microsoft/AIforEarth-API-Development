@@ -336,3 +336,6 @@ Notebooks/.ipynb_checkpoints/template-demo-checkpoint.ipynb
 
 # Jupyter notebook
 .ipynb_checkpoints/
+
+# IDE
+.idea
