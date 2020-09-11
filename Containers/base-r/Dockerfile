@@ -57,12 +57,15 @@ RUN Rscript -e 'install.packages("reticulate");'
 RUN Rscript -e 'install.packages("urltools");'
 RUN Rscript -e 'install.packages("ids");'
 
-RUN apt-get update \
-  && apt-get install -y python3-pip python3-dev \
-  && cd /usr/local/bin \
-  && ln -s /usr/bin/python3 python \
-  && pip3 install --upgrade pip
-  
+RUN add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y python3-setuptools \
+        python3.7-dev \
+        python3.7
+
+RUN apt-get update && apt-get install python3-pip -y
+RUN python3.7 -m pip install pip --upgrade
+
 COPY ./base-py/requirements.txt /ai4e_api_tools/
 WORKDIR /ai4e_api_tools
 RUN pip3 install -r ./requirements.txt
