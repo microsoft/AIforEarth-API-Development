@@ -3,9 +3,9 @@ These images and examples are meant to illustrate how to build containers for us
 - [mcr.microsoft.com/aiforearth/base-py](https://hub.docker.com/_/microsoft-aiforearth-base-py)
     - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/base-py/tags/list)
     - The latest base-py images are available derived from several CUDA images:
-        - 1.14 - nvidia/cuda:9.2-runtime-ubuntu16.04
-        - 1.14-cuda-9.0 - nvidia/cuda:9.0-runtime-ubuntu16.04
-        - 1.14-cuda-9.0-devel - nvidia/cuda:9.0-devel-ubuntu16.04
+        - 1.15 - nvidia/cuda:9.2-runtime-ubuntu16.04
+        - 1.15-cuda-9.0 - nvidia/cuda:9.0-runtime-ubuntu16.04
+        - 1.15-cuda-9.0-devel - nvidia/cuda:9.0-devel-ubuntu16.04
     - The base-py image can be built using any Ubuntu image of your choice by building with the optional BASE_IMAGE build argument.
         - Example of how to build with the CUDA 9.0 devel image (inside [Containers](./Containers)):
             - `docker build . -f base-py/Dockerfile -t base-py:1.13-cuda-9.0-devel --build-arg BASE_IMAGE=nvidia/cuda:9.0-devel-ubuntu16.04`
@@ -13,12 +13,12 @@ These images and examples are meant to illustrate how to build containers for us
 - [mcr.microsoft.com/aiforearth/blob-py](https://hub.docker.com/_/microsoft-aiforearth-blob-python)
     - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/blob-python/tags/list)
     - The latest base-py images are available derived from several CUDA images:
-        - 1.14 - nvidia/cuda:9.2-runtime-ubuntu16.04
+        - 1.5 - nvidia/cuda:9.2-runtime-ubuntu16.04
 
 - [mcr.microsoft.com/aiforearth/base-r](https://hub.docker.com/_/microsoft-aiforearth-base-r)
     - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/base-r/tags/list)
     - The latest base-r images are available derived from gdal:
-        - 1.7 - osgeo/gdal:ubuntu-full-3.0.3
+        - 1.8 - osgeo/gdal:ubuntu-full-3.0.3
 
 - [mcr.microsoft.com/aiforearth/blob-r](https://hub.docker.com/_/microsoft-aiforearth-blob-r)
     - [Available Tags](https://mcr.microsoft.com/v2/aiforearth/blob-r/tags/list)
