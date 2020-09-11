@@ -104,8 +104,8 @@ class AadBlob:
         print("{} for {}/{}".format('create_blob_from_path', container, blob))
 
         if not self.credential_type is LOCAL_CRED_TYPE:
-            with open(path, "r") as data_handle:
-                data = data_handle.read()
+            with open(path, "rb") as handle:
+                data = handle.read()
                 return self._write_blob(container, blob, data)
 
         else: # LOCAL_CRED_TYPE
@@ -121,7 +121,7 @@ class AadBlob:
     # Get Blobs............................
     def _download_managed_identity_blob(self, container, blob):
         token_credential = self._get_managed_identity_credential()
-
+        
         blob_uri = self.get_blob_uri(container, blob)
         headers = { 'Authorization': "Bearer " + token_credential,
                     'x-ms-version': '2019-07-07',
@@ -134,8 +134,8 @@ class AadBlob:
 
         if self.credential_type is MANAGED_IDENTITY_CRED_TYPE:
             get_response = self._download_managed_identity_blob(container, blob)
-            #data = (get_response.text if encoding else get_response.content)
-            return get_response
+            data = (get_response.text if encoding else get_response.content)
+            return data
 
         else: # CLIENT_SECRET_CRED_TYPE:
             blob_service_client = self._get_blob_service_client()
@@ -147,11 +147,8 @@ class AadBlob:
         file_type = ('w' if encoding else 'wb')
         if self.credential_type is MANAGED_IDENTITY_CRED_TYPE:
             with open(local_file, file_type) as open_file:
-                #data = self._get_blob(container, blob, encoding)
-                get_response = self._get_blob(container, blob, encoding)
-                data = (get_response.text if encoding else get_response.content)
+                data = self._get_blob(container, blob, encoding)
                 open_file.write(data)
-                return str(get_response.headers)
                 
         elif self.credential_type is CLIENT_SECRET_CRED_TYPE:
             with open(local_file, file_type) as open_file:
