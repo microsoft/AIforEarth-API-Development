@@ -21,14 +21,15 @@ RUN apt-get update --fix-missing \
         libxext6 \
         libsm6 \
         libxrender1 \
-        python3.8 \
         python3-setuptools \
-        python3-dev \
+        python3.7-dev \
+        python3.7 \
         apt-transport-https \
         build-essential \
-        gcc 
+        gcc
 
-RUN easy_install3 pip
+RUN apt-get update && apt-get install python3-pip -y
+RUN python3.7 -m pip install pip --upgrade
 
 COPY ./base-py/requirements.txt /ai4e_api_tools/
 WORKDIR /ai4e_api_tools
