@@ -1,3 +1,5 @@
+## Due to new featues that have since been added to Azure Machine Learning, this repository is now deprecated.
+
 # AI for Earth - Creating APIs
 These images and examples are meant to illustrate how to build containers for use in the AI for Earth API system. The following images and tags (versions/images) are available on Dockerhub:
 - [mcr.microsoft.com/aiforearth/base-py](https://hub.docker.com/_/microsoft-aiforearth-base-py)
